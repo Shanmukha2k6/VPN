@@ -118,15 +118,6 @@ fun HomeScreen(
                     containerColor = Color.Transparent
                 )
             )
-        },
-        bottomBar = {
-            AdmobBanner(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .navigationBarsPadding()
-                    .padding(bottom = 4.dp)
-            )
         }
     ) { padding ->
 
@@ -322,7 +313,14 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(24.dp))
+            AdmobBanner(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(bottom = 12.dp)
+            )
+            Spacer(Modifier.height(24.dp))
         }
     }
 }

@@ -40,7 +40,7 @@ fun ServerListScreen(
         query.isBlank() ||
         s.countryName.contains(query, ignoreCase = true) ||
         s.city.contains(query, ignoreCase = true)
-    }
+    }.sortedBy { it.countryName }
 
     val currentPrimary = MaterialTheme.colorScheme.primary
     val currentOnBackground = MaterialTheme.colorScheme.onBackground
