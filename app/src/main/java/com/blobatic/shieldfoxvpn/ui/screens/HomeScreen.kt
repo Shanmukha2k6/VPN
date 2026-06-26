@@ -121,11 +121,11 @@ fun HomeScreen(
             // ── Status Info (Under location, above connect button/switch) ──────
             StatusLabel(uiState.vpnState)
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(4.dp))
 
             // ── Radar Canvas & Power Button ──────────────────────────────────
             Box(
-                modifier = Modifier.size(280.dp),
+                modifier = Modifier.size(220.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Radar / Satellite cyber-grid scanner animation in background
@@ -140,17 +140,17 @@ fun HomeScreen(
                     // Concentric coordinate rings
                     drawCircle(
                         color = scannerColor,
-                        radius = 80.dp.toPx(),
+                        radius = 60.dp.toPx(),
                         style = Stroke(width = 1.dp.toPx())
                     )
                     drawCircle(
                         color = scannerColor,
-                        radius = 115.dp.toPx(),
+                        radius = 90.dp.toPx(),
                         style = Stroke(width = 1.dp.toPx())
                     )
                     drawCircle(
                         color = scannerColor.copy(alpha = 0.03f),
-                        radius = 135.dp.toPx(),
+                        radius = 100.dp.toPx(),
                         style = Stroke(
                             width = 1.dp.toPx(),
                             pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f), 0f)
@@ -160,14 +160,14 @@ fun HomeScreen(
                     // Axes coordinates
                     drawLine(
                         color = scannerColor.copy(alpha = 0.02f),
-                        start = Offset(center.x - 140.dp.toPx(), center.y),
-                        end = Offset(center.x + 140.dp.toPx(), center.y),
+                        start = Offset(center.x - 110.dp.toPx(), center.y),
+                        end = Offset(center.x + 110.dp.toPx(), center.y),
                         strokeWidth = 1.dp.toPx()
                     )
                     drawLine(
                         color = scannerColor.copy(alpha = 0.02f),
-                        start = Offset(center.x, center.y - 140.dp.toPx()),
-                        end = Offset(center.x, center.y + 140.dp.toPx()),
+                        start = Offset(center.x, center.y - 110.dp.toPx()),
+                        end = Offset(center.x, center.y + 110.dp.toPx()),
                         strokeWidth = 1.dp.toPx()
                     )
 
@@ -177,10 +177,10 @@ fun HomeScreen(
                             moveTo(center.x, center.y)
                             arcTo(
                                 rect = Rect(
-                                    center.x - 115.dp.toPx(),
-                                    center.y - 115.dp.toPx(),
-                                    center.x + 115.dp.toPx(),
-                                    center.y + 115.dp.toPx()
+                                    center.x - 90.dp.toPx(),
+                                    center.y - 90.dp.toPx(),
+                                    center.x + 90.dp.toPx(),
+                                    center.y + 90.dp.toPx()
                                 ),
                                 startAngleDegrees = -90f,
                                 sweepAngleDegrees = 45f,
@@ -196,7 +196,7 @@ fun HomeScreen(
                                     Color.Transparent
                                 ),
                                 center = center,
-                                radius = 115.dp.toPx()
+                                radius = 90.dp.toPx()
                             )
                         )
                     }
@@ -210,7 +210,7 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(8.dp))
 
             // ── Connection timer ──────────────────────────────────────────────
             AnimatedVisibility(
@@ -357,13 +357,6 @@ private fun StatusLabel(state: VpnState) {
                 fontWeight    = FontWeight.Bold
             )
         }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text          = subtitle,
-            style         = MaterialTheme.typography.bodySmall,
-            color         = currentOnSurfaceVariant,
-            textAlign     = TextAlign.Center
-        )
     }
 }
 

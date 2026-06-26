@@ -3,12 +3,12 @@
     <style name="Theme.ShieldFox" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowBackground">#0D0F14</item>
+        <item name="android:windowBackground">#EEF2FF</item>
     </style>
 
     <style name="Theme.ShieldFox.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#0D0F14</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="windowSplashScreenBackground">#EEF2FF</item>
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
         <item name="postSplashScreenTheme">@style/Theme.ShieldFox</item>
     </style>
 </resources>
