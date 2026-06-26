@@ -39,6 +39,7 @@ import com.blobatic.shieldfoxvpn.ui.components.AdmobBanner
 import com.blobatic.shieldfoxvpn.ui.components.VpnPowerButton
 import com.blobatic.shieldfoxvpn.ui.components.VpnTelemetry
 import com.blobatic.shieldfoxvpn.ui.theme.*
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -409,10 +410,14 @@ private fun LocationSelector(server: VpnServer?, onClick: () -> Unit) {
         ) {
             // Flag Emoji or Globe Icon
             if (server != null) {
-                Text(
-                    text = countryFlag(server.countryCode),
-                    fontSize = 24.sp,
-                    modifier = Modifier.size(32.dp)
+                AsyncImage(
+                    model = "https://flagcdn.com/w80/${server.countryCode.lowercase()}.png",
+                    contentDescription = "${server.countryName} Flag",
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), CircleShape),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
             } else {
                 Box(

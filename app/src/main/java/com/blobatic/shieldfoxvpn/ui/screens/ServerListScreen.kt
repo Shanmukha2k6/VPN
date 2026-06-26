@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.blobatic.shieldfoxvpn.data.model.VpnServer
 import com.blobatic.shieldfoxvpn.ui.theme.*
 import com.blobatic.shieldfoxvpn.viewmodel.VpnViewModel
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -316,10 +317,14 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Flag
-            Text(
-                text = countryFlag(server.countryCode),
-                fontSize = 24.sp,
-                modifier = Modifier.width(32.dp)
+            AsyncImage(
+                model = "https://flagcdn.com/w80/${server.countryCode.lowercase()}.png",
+                contentDescription = "${server.countryName} Flag",
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), CircleShape),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
