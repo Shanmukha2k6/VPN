@@ -1,4 +1,4 @@
-package com.securevpn.app.service
+﻿package com.blobatic.shieldfoxvpn.service
 
 import android.util.Log
 import java.io.InputStream

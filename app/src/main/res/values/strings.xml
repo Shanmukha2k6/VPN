@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WingerVpn</string>
+    <string name="app_name">ShieldFox</string>
     <string name="status_connected">Protected</string>
     <string name="status_disconnected">Unprotected</string>
     <string name="status_connecting">Connecting…</string>

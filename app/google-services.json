@@ -1,4 +1,4 @@
-{
+﻿{
   "project_info": {
     "project_number": "1234567890",
     "project_id": "securevpn-app",
@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:1234567890:android:abcdef1234567890",
         "android_client_info": {
-          "package_name": "com.securevpn.app"
+          "package_name": "com.blobatic.shieldfoxvpn"
         }
       },
       "oauth_client": [],
@@ -28,7 +28,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:1234567890:android:abcdef1234567891",
         "android_client_info": {
-          "package_name": "com.securevpn.app.debug"
+          "package_name": "com.blobatic.shieldfoxvpn.debug"
         }
       },
       "oauth_client": [],

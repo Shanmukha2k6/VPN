@@ -1,14 +1,14 @@
-package com.securevpn.app.viewmodel
+﻿package com.blobatic.shieldfoxvpn.viewmodel
 
 import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.securevpn.app.data.model.VpnProtocol
-import com.securevpn.app.data.model.VpnServer
-import com.securevpn.app.data.model.VpnState
-import com.securevpn.app.data.repository.VpnServerRepository
-import com.securevpn.app.service.VpnTunnelService
+import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
+import com.blobatic.shieldfoxvpn.data.model.VpnServer
+import com.blobatic.shieldfoxvpn.data.model.VpnState
+import com.blobatic.shieldfoxvpn.data.repository.VpnServerRepository
+import com.blobatic.shieldfoxvpn.service.VpnTunnelService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay

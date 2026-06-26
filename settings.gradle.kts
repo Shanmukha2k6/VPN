@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WingerVpn"
+rootProject.name = "ShieldFox"
 include(":app")

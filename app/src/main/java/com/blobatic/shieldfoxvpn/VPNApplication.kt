@@ -1,4 +1,4 @@
-package com.securevpn.app
+﻿package com.blobatic.shieldfoxvpn
 
 import android.app.Application
 import com.google.android.gms.ads.MobileAds

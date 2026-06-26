@@ -24,7 +24,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_splash_logo"
         android:supportsRtl="true"
-        android:theme="@style/Theme.WingerVpn"
+        android:theme="@style/Theme.ShieldFox"
         tools:targetApi="31">
 
         <!-- AdMob App ID -->
@@ -47,7 +47,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.WingerVpn.Splash"
+            android:theme="@style/Theme.ShieldFox.Splash"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

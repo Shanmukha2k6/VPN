@@ -1,4 +1,4 @@
-package com.securevpn.app
+﻿package com.blobatic.shieldfoxvpn
 
 import android.app.Activity
 import android.content.Context
@@ -18,9 +18,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.securevpn.app.ui.navigation.VPNNavGraph
-import com.securevpn.app.ui.theme.WingerVpnTheme
-import com.securevpn.app.ui.theme.ThemeManager
+import com.blobatic.shieldfoxvpn.ui.navigation.VPNNavGraph
+import com.blobatic.shieldfoxvpn.ui.theme.ShieldFoxTheme
+import com.blobatic.shieldfoxvpn.ui.theme.ThemeManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isDarkTheme by ThemeManager.isDarkTheme.collectAsState()
-            WingerVpnTheme(darkTheme = isDarkTheme) {
+            ShieldFoxTheme(darkTheme = isDarkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

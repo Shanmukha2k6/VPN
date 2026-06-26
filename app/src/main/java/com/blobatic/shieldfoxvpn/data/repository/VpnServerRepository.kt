@@ -1,8 +1,8 @@
-package com.securevpn.app.data.repository
+﻿package com.blobatic.shieldfoxvpn.data.repository
 
 import android.content.Context
-import com.securevpn.app.data.model.VpnProtocol
-import com.securevpn.app.data.model.VpnServer
+import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
+import com.blobatic.shieldfoxvpn.data.model.VpnServer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

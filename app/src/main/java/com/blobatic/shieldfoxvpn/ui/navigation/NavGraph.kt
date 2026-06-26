@@ -1,12 +1,12 @@
-package com.securevpn.app.ui.navigation
+﻿package com.blobatic.shieldfoxvpn.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.securevpn.app.ui.screens.HomeScreen
-import com.securevpn.app.ui.screens.ServerListScreen
-import com.securevpn.app.ui.screens.SettingsScreen
+import com.blobatic.shieldfoxvpn.ui.screens.HomeScreen
+import com.blobatic.shieldfoxvpn.ui.screens.ServerListScreen
+import com.blobatic.shieldfoxvpn.ui.screens.SettingsScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")

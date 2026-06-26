@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.securevpn.app"
+    namespace = "com.blobatic.shieldfoxvpn"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.securevpn.app"
+        applicationId = "com.blobatic.shieldfoxvpn"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

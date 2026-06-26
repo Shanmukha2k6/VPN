@@ -1,4 +1,4 @@
-package com.securevpn.app.service
+﻿package com.blobatic.shieldfoxvpn.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -12,11 +12,11 @@ import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.securevpn.app.MainActivity
-import com.securevpn.app.R
-import com.securevpn.app.data.model.VpnProtocol
-import com.securevpn.app.data.model.VpnServer
-import com.securevpn.app.data.model.VpnState
+import com.blobatic.shieldfoxvpn.MainActivity
+import com.blobatic.shieldfoxvpn.R
+import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
+import com.blobatic.shieldfoxvpn.data.model.VpnServer
+import com.blobatic.shieldfoxvpn.data.model.VpnState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,8 +61,8 @@ class VpnTunnelService : VpnService() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_channel"
 
-        const val ACTION_CONNECT = "com.securevpn.app.CONNECT"
-        const val ACTION_DISCONNECT = "com.securevpn.app.DISCONNECT"
+        const val ACTION_CONNECT = "com.blobatic.shieldfoxvpn.CONNECT"
+        const val ACTION_DISCONNECT = "com.blobatic.shieldfoxvpn.DISCONNECT"
         const val EXTRA_SERVER = "extra_server"
 
         // Singleton state exposed to the rest of the app
@@ -340,7 +340,7 @@ class VpnTunnelService : VpnService() {
                 }
 
                 val builder = Builder()
-                    .setSession("WingerVpn - ${server.countryName} (Proxy)")
+                    .setSession("ShieldFox - ${server.countryName} (Proxy)")
                     .addAddress("10.8.0.2", 24)
                     .addRoute("10.8.0.2", 32)
                     .setHttpProxy(proxyInfo)
@@ -454,7 +454,7 @@ class VpnTunnelService : VpnService() {
             PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("WingerVpn")
+            .setContentTitle("ShieldFox")
             .setContentText(message)
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentIntent(pendingIntent)

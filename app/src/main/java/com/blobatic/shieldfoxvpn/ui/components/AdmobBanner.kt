@@ -1,4 +1,4 @@
-package com.securevpn.app.ui.components
+﻿package com.blobatic.shieldfoxvpn.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -15,7 +15,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
-import com.securevpn.app.BuildConfig
+import com.blobatic.shieldfoxvpn.BuildConfig
 
 /**
  * A policy-compliant AdMob Medium Rectangle banner ad container.

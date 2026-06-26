@@ -1,4 +1,4 @@
-package com.securevpn.app.di
+﻿package com.blobatic.shieldfoxvpn.di
 
 import android.content.Context
 import dagger.Module

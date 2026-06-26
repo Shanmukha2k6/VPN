@@ -1,4 +1,4 @@
-package com.securevpn.app.data.model
+﻿package com.blobatic.shieldfoxvpn.data.model
 
 import java.io.Serializable
 import androidx.annotation.DrawableRes
