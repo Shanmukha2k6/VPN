@@ -33,44 +33,14 @@ fun VpnTelemetry(
     val currentPrimary = MaterialTheme.colorScheme.primary
     val currentSecondary = MaterialTheme.colorScheme.secondary
     val currentOutline = MaterialTheme.colorScheme.outline
-    val currentSurface = MaterialTheme.colorScheme.surface
 
     var downloadSpeed by remember { mutableStateOf("0.0 Mbps") }
     var uploadSpeed by remember { mutableStateOf("0.0 Mbps") }
 
-    val pulseTransition = rememberInfiniteTransition(label = "dots_pulse")
-    val pulseAlpha by if (isConnected) {
-        pulseTransition.animateFloat(
-            initialValue = 0.3f,
-            targetValue = 1.0f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(800, easing = EaseInOutSine),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "alpha"
-        )
-    } else {
-        remember { mutableStateOf(0.4f) }
-    }
-
-    val getSpeedFraction = { speedStr: String ->
-        val numStr = speedStr.substringBefore(" ").trim()
-        val value = numStr.toFloatOrNull() ?: 0f
-        val isGbps = speedStr.contains("Gbps", ignoreCase = true)
-        val isMbps = speedStr.contains("Mbps", ignoreCase = true)
-        val actualValue = when {
-            isGbps -> value * 1000f
-            isMbps -> value
-            else -> value / 1000f
-        }
-        (actualValue / 100f).coerceIn(0.04f, 1f)
-    }
-
     LaunchedEffect(vpnState) {
-        if (isConnected) {
-            val connectedState = vpnState as VpnState.Connected
-            var prevBytesIn = connectedState.bytesIn
-            var prevBytesOut = connectedState.bytesOut
+        if (vpnState is VpnState.Connected) {
+            var prevBytesIn = vpnState.bytesIn
+            var prevBytesOut = vpnState.bytesOut
 
             while (true) {
                 delay(1000)
@@ -106,7 +76,7 @@ fun VpnTelemetry(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .height(84.dp)
+            .height(72.dp)
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(20.dp),
@@ -138,131 +108,30 @@ fun VpnTelemetry(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left Column: Download
+            // Left Column: Upload
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(horizontal = 14.dp),
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(currentPrimary.copy(alpha = 0.12f))
+                        .border(0.5.dp, currentPrimary.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .align(Alignment.BottomStart)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(currentSecondary.copy(alpha = 0.12f))
-                            .border(0.5.dp, currentSecondary.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowDownward,
-                            contentDescription = null,
-                            tint = currentSecondary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    if (isConnected) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .align(Alignment.TopEnd)
-                                .clip(CircleShape)
-                                .background(currentSecondary.copy(alpha = pulseAlpha))
-                        )
-                    }
-                }
-                Spacer(Modifier.width(10.dp))
-                Column {
-                    Text(
-                        text = "DOWNLOAD",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF0F172A).copy(alpha = 0.6f),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 9.sp
+                    Icon(
+                        imageVector = Icons.Default.ArrowUpward,
+                        contentDescription = null,
+                        tint = currentPrimary,
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(Modifier.height(1.dp))
-                    Text(
-                        text = downloadSpeed,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0F172A),
-                        fontSize = 16.sp
-                    )
-                    Spacer(Modifier.height(3.dp))
-                    val dlFraction = getSpeedFraction(downloadSpeed)
-                    val animatedDlFraction by animateFloatAsState(
-                        targetValue = if (isConnected) dlFraction else 0.04f,
-                        animationSpec = tween(500, easing = FastOutSlowInEasing),
-                        label = "dl_progress"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .width(64.dp)
-                            .height(3.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE2E8F0))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(animatedDlFraction)
-                                .background(currentSecondary)
-                        )
-                    }
                 }
-            }
-
-            // Minimal vertical divider
-            Box(
-                modifier = Modifier
-                    .width(0.5.dp)
-                    .height(42.dp)
-                    .background(currentOutline)
-            )
-
-            // Right Column: Upload
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(horizontal = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .align(Alignment.BottomStart)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(currentPrimary.copy(alpha = 0.12f))
-                            .border(0.5.dp, currentPrimary.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowUpward,
-                            contentDescription = null,
-                            tint = currentPrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    if (isConnected) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .align(Alignment.TopEnd)
-                                .clip(CircleShape)
-                                .background(currentPrimary.copy(alpha = pulseAlpha))
-                        )
-                    }
-                }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
                         text = "UPLOAD",
@@ -280,27 +149,58 @@ fun VpnTelemetry(
                         color = Color(0xFF0F172A),
                         fontSize = 16.sp
                     )
-                    Spacer(Modifier.height(3.dp))
-                    val ulFraction = getSpeedFraction(uploadSpeed)
-                    val animatedUlFraction by animateFloatAsState(
-                        targetValue = if (isConnected) ulFraction else 0.04f,
-                        animationSpec = tween(500, easing = FastOutSlowInEasing),
-                        label = "ul_progress"
+                }
+            }
+
+            // Minimal vertical divider
+            Box(
+                modifier = Modifier
+                    .width(0.5.dp)
+                    .height(36.dp)
+                    .background(currentOutline)
+            )
+
+            // Right Column: Download
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(currentSecondary.copy(alpha = 0.12f))
+                        .border(0.5.dp, currentSecondary.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDownward,
+                        contentDescription = null,
+                        tint = currentSecondary,
+                        modifier = Modifier.size(16.dp)
                     )
-                    Box(
-                        modifier = Modifier
-                            .width(64.dp)
-                            .height(3.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE2E8F0))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(animatedUlFraction)
-                                .background(currentPrimary)
-                        )
-                    }
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "DOWNLOAD",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF0F172A).copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        fontSize = 9.sp
+                    )
+                    Spacer(Modifier.height(1.dp))
+                    Text(
+                        text = downloadSpeed,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A),
+                        fontSize = 16.sp
+                    )
                 }
             }
         }
