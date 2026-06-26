@@ -69,7 +69,7 @@ fun LoadingScreen(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Fast and secure VPN loading...",
+                text = "ShieldFox: Fast and secure VPN loading",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF475569).copy(alpha = 0.7f), // Slate 600 subtext
                 fontWeight = FontWeight.Normal,

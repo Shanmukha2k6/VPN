@@ -22,14 +22,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blobatic.shieldfoxvpn.ui.theme.*
+import android.content.Intent
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
-    var autoConn   by remember { mutableStateOf(false) }
-    var kill       by remember { mutableStateOf(false) }
-    var dns        by remember { mutableStateOf(true) }
     var notifs     by remember { mutableStateOf(true) }
+    var showAboutDialog by remember { mutableStateOf(false) }
 
     val currentPrimary = MaterialTheme.colorScheme.primary
     val currentSecondary = MaterialTheme.colorScheme.secondary
@@ -81,52 +81,7 @@ fun SettingsScreen(onBack: () -> Unit) {
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // ── Connection Settings Group ──────────────────────────────────────
-            SettingsGroupHeader("CONNECTION TUNNEL")
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp)),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = currentSurface)
-            ) {
-                Column {
-                    ToggleRow(
-                        icon = Icons.Default.Wifi,
-                        iconBg = currentPrimary.copy(alpha = 0.12f),
-                        iconTint = currentPrimary,
-                        title = "Auto Connect",
-                        sub = "Initialize VPN on untrusted Wi-Fi",
-                        checked = autoConn,
-                        onChange = { autoConn = it }
-                    )
-                    Divider()
-                    ToggleRow(
-                        icon = Icons.Default.Block,
-                        iconBg = Rose.copy(alpha = 0.12f),
-                        iconTint = Rose,
-                        title = "Kill Switch",
-                        sub = "Block network if connection drops",
-                        checked = kill,
-                        onChange = { kill = it }
-                    )
-                    Divider()
-                    ToggleRow(
-                        icon = Icons.Default.Security,
-                        iconBg = currentSecondary.copy(alpha = 0.12f),
-                        iconTint = currentSecondary,
-                        title = "DNS Leak Protection",
-                        sub = "Force private DNS resolver query routing",
-                        checked = dns,
-                        onChange = { dns = it }
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // ── Appearance Settings Group ──────────────────────────────────────
+            // ── Preferences Settings Group ──────────────────────────────────────
             SettingsGroupHeader("PREFERENCES")
             Card(
                 modifier = Modifier
@@ -162,18 +117,38 @@ fun SettingsScreen(onBack: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = currentSurface)
             ) {
                 Column {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    NavRow(
+                        icon = Icons.Default.Star,
+                        iconBg = currentSecondary.copy(alpha = 0.12f),
+                        iconTint = currentSecondary,
+                        title = "Rate Us",
+                        sub = "Support ShieldFox VPN on Google Play Store",
+                        onClick = {
+                            try {
+                                val playIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+                                playIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(playIntent)
+                            } catch (e: Exception) {
+                                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
+                                webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(webIntent)
+                            }
+                        }
+                    )
+                    Divider()
                     NavRow(
                         icon = Icons.Default.Info,
-                        iconBg = currentOutline,
-                        iconTint = currentOnBackground,
-                        title = "System Information",
-                        sub = "ShieldFox VPN Core Client v1.0.0",
-                        onClick = {}
+                        iconBg = currentPrimary.copy(alpha = 0.12f),
+                        iconTint = currentPrimary,
+                        title = "About",
+                        sub = "ShieldFox VPN client specifications",
+                        onClick = { showAboutDialog = true }
                     )
                     Divider()
                     NavRow(
                         icon = Icons.Default.PrivacyTip,
-                        iconBg = currentOutline,
+                        iconBg = currentOutline.copy(alpha = 0.4f),
                         iconTint = currentOnBackground,
                         title = "Privacy Policy",
                         sub = "No-log routing commitment details",
@@ -182,7 +157,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     Divider()
                     NavRow(
                         icon = Icons.Default.Gavel,
-                        iconBg = currentOutline,
+                        iconBg = currentOutline.copy(alpha = 0.4f),
                         iconTint = currentOnBackground,
                         title = "Terms of Service",
                         sub = "Usage boundaries and fair routing rules",
@@ -192,6 +167,53 @@ fun SettingsScreen(onBack: () -> Unit) {
             }
 
             Spacer(Modifier.height(40.dp))
+
+            if (showAboutDialog) {
+                AlertDialog(
+                    onDismissRequest = { showAboutDialog = false },
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = com.blobatic.shieldfoxvpn.R.drawable.ic_splash_logo),
+                                contentDescription = "Logo",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                            Column {
+                                Text(
+                                    text = "ShieldFox VPN",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = currentOnBackground
+                                )
+                                Text(
+                                    text = "Version 1.0.4",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = currentOnSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    text = {
+                        Text(
+                            text = "ShieldFox is a premium high-speed secure VPN client using next-generation encryption protocols to guarantee online anonymity and untracked network routing. Built with love by Blobatic.\n\nAll rights reserved © 2026.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = currentOnBackground.copy(alpha = 0.8f)
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showAboutDialog = false }) {
+                            Text("Close", color = currentPrimary)
+                        }
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = currentSurface
+                )
+            }
 
             // Footer branding
             Text(

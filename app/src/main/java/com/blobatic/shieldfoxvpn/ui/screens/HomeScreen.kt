@@ -112,7 +112,8 @@ fun HomeScreen(
 
             // ── Location Selector Card ─────────────────────────────────────────
             LocationSelector(
-                server = uiState.selectedServer,
+                server = (uiState.vpnState as? VpnState.Connected)?.server ?: uiState.selectedServer,
+                isConnected = uiState.vpnState is VpnState.Connected,
                 onClick = onNavigateToServers
             )
 
@@ -221,10 +222,10 @@ fun HomeScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = viewModel.formatTimer(uiState.connectedSeconds),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.secondary,
-                        letterSpacing = 4.sp,
+                        letterSpacing = 2.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -357,7 +358,7 @@ private fun StatusLabel(state: VpnState) {
 // ─── Location Selector Card ───────────────────────────────────────────────────
 
 @Composable
-private fun LocationSelector(server: VpnServer?, onClick: () -> Unit) {
+private fun LocationSelector(server: VpnServer?, isConnected: Boolean, onClick: () -> Unit) {
     val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val currentOutline = MaterialTheme.colorScheme.outline
 
@@ -405,7 +406,7 @@ private fun LocationSelector(server: VpnServer?, onClick: () -> Unit) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "TARGET GATEWAY",
+                    text = if (isConnected) "CONNECTED GATEWAY" else "TARGET GATEWAY",
                     style = MaterialTheme.typography.labelSmall,
                     color = currentOnSurfaceVariant.copy(alpha = 0.6f),
                     letterSpacing = 1.sp
