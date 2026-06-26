@@ -1,9 +1,13 @@
 package com.blobatic.shieldfoxvpn.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,14 +15,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.blobatic.shieldfoxvpn.ui.theme.Emerald
-import com.blobatic.shieldfoxvpn.ui.theme.Indigo
-import com.blobatic.shieldfoxvpn.ui.theme.ThemeManager
+import com.blobatic.shieldfoxvpn.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,24 +39,31 @@ fun SettingsScreen(onBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Text(
-                        "Settings",
+                        text = "Settings",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextPrimary,
                         letterSpacing = (-0.5).sp
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .size(36.dp)
+                    ) {
                         Icon(
-                            Icons.Default.ArrowBack, null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -63,111 +74,156 @@ fun SettingsScreen(onBack: () -> Unit) {
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(Modifier.height(16.dp))
 
-            Spacer(Modifier.height(8.dp))
+            // ── Connection Settings Group ──────────────────────────────────────
+            SettingsGroupHeader("CONNECTION TUNNEL")
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceGlass)
+            ) {
+                Column {
+                    ToggleRow(
+                        icon = Icons.Default.Wifi,
+                        iconBg = Sapphire.copy(alpha = 0.12f),
+                        iconTint = Sapphire,
+                        title = "Auto Connect",
+                        sub = "Initialize VPN on untrusted Wi-Fi",
+                        checked = autoConn,
+                        onChange = { autoConn = it }
+                    )
+                    Divider()
+                    ToggleRow(
+                        icon = Icons.Default.Block,
+                        iconBg = Rose.copy(alpha = 0.12f),
+                        iconTint = Rose,
+                        title = "Kill Switch",
+                        sub = "Block network if connection drops",
+                        checked = kill,
+                        onChange = { kill = it }
+                    )
+                    Divider()
+                    ToggleRow(
+                        icon = Icons.Default.Security,
+                        iconBg = NeonEmerald.copy(alpha = 0.12f),
+                        iconTint = NeonEmerald,
+                        title = "DNS Leak Protection",
+                        sub = "Force private DNS resolver query routing",
+                        checked = dns,
+                        onChange = { dns = it }
+                    )
+                }
+            }
 
-            // ── Connection ────────────────────────────────────────────────────
-            SectionLabel("Connection")
+            Spacer(Modifier.height(20.dp))
 
-            ToggleRow(
-                icon    = Icons.Default.Wifi,
-                title   = "Auto Connect",
-                sub     = "Connect on network change",
-                checked = autoConn,
-                onChange = { autoConn = it }
-            )
-            Divider()
-            ToggleRow(
-                icon    = Icons.Default.Block,
-                title   = "Kill Switch",
-                sub     = "Block traffic if VPN drops",
-                checked = kill,
-                onChange = { kill = it }
-            )
-            Divider()
-            ToggleRow(
-                icon    = Icons.Default.Security,
-                title   = "DNS Leak Protection",
-                sub     = "Route DNS through tunnel",
-                checked = dns,
-                onChange = { dns = it }
-            )
+            // ── Appearance Settings Group ──────────────────────────────────────
+            SettingsGroupHeader("PREFERENCES")
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceGlass)
+            ) {
+                Column {
+                    ToggleRow(
+                        icon = Icons.Default.LightMode,
+                        iconBg = Amber.copy(alpha = 0.12f),
+                        iconTint = Amber,
+                        title = "Light Mode",
+                        sub = "Switch color theme of the interface",
+                        checked = !isDark,
+                        onChange = { ThemeManager.setDarkTheme(!it) }
+                    )
+                    Divider()
+                    ToggleRow(
+                        icon = Icons.Default.Notifications,
+                        iconBg = Sapphire.copy(alpha = 0.12f),
+                        iconTint = Sapphire,
+                        title = "Notifications",
+                        sub = "Push alert on connection state changes",
+                        checked = notifs,
+                        onChange = { notifs = it }
+                    )
+                }
+            }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // ── Appearance ────────────────────────────────────────────────────
-            SectionLabel("Appearance")
-
-            ToggleRow(
-                icon    = Icons.Default.LightMode,
-                title   = "Light Mode",
-                sub     = "Switch color scheme",
-                checked = !isDark,
-                onChange = { ThemeManager.setDarkTheme(!it) }
-            )
-            Divider()
-            ToggleRow(
-                icon    = Icons.Default.Notifications,
-                title   = "Notifications",
-                sub     = "VPN status alerts",
-                checked = notifs,
-                onChange = { notifs = it }
-            )
-
-            Spacer(Modifier.height(32.dp))
-
-            // ── About ─────────────────────────────────────────────────────────
-            SectionLabel("About")
-
-            NavRow(
-                icon  = Icons.Default.Info,
-                title = "About ShieldFox",
-                sub   = "Version 1.0.0",
-                onClick = {}
-            )
-            Divider()
-            NavRow(
-                icon  = Icons.Default.PrivacyTip,
-                title = "Privacy Policy",
-                sub   = "How we handle your data",
-                onClick = {}
-            )
-            Divider()
-            NavRow(
-                icon  = Icons.Default.Gavel,
-                title = "Terms of Service",
-                sub   = "Terms & conditions",
-                onClick = {}
-            )
+            // ── About Settings Group ───────────────────────────────────────────
+            SettingsGroupHeader("ABOUT SHIELDFOX")
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceGlass)
+            ) {
+                Column {
+                    NavRow(
+                        icon = Icons.Default.Info,
+                        iconBg = GlassBorder,
+                        iconTint = TextPrimary,
+                        title = "System Information",
+                        sub = "ShieldFox Core Client v1.0.0",
+                        onClick = {}
+                    )
+                    Divider()
+                    NavRow(
+                        icon = Icons.Default.PrivacyTip,
+                        iconBg = GlassBorder,
+                        iconTint = TextPrimary,
+                        title = "Privacy Policy",
+                        sub = "No-log routing commitment details",
+                        onClick = {}
+                    )
+                    Divider()
+                    NavRow(
+                        icon = Icons.Default.Gavel,
+                        iconBg = GlassBorder,
+                        iconTint = TextPrimary,
+                        title = "Terms of Service",
+                        sub = "Usage boundaries and fair routing rules",
+                        onClick = {}
+                    )
+                }
+            }
 
             Spacer(Modifier.height(40.dp))
 
+            // Footer branding
             Text(
-                "ShieldFox • by Blobatic",
-                style  = MaterialTheme.typography.labelMedium,
-                color  = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f),
-                letterSpacing = 1.sp,
+                text = "SHIELDFOX • BY BLOBATIC",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMuted,
+                letterSpacing = 1.5.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 36.dp)
             )
         }
     }
 }
 
-// ─── Section Label ────────────────────────────────────────────────────────────
+// ─── Settings Group Header ───────────────────────────────────────────────────
 
 @Composable
-private fun SectionLabel(text: String) {
+private fun SettingsGroupHeader(text: String) {
     Text(
-        text          = text.uppercase(),
-        style         = MaterialTheme.typography.labelMedium,
-        color         = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
-        letterSpacing = 2.sp,
-        modifier      = Modifier.padding(
-            start = 24.dp, end = 24.dp,
-            top = 0.dp, bottom = 8.dp
-        )
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = TextMuted,
+        letterSpacing = 1.5.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 28.dp, bottom = 4.dp)
     )
 }
 
@@ -176,9 +232,9 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun Divider() {
     HorizontalDivider(
-        color     = MaterialTheme.colorScheme.outline.copy(0.3f),
+        color = GlassBorder.copy(alpha = 0.6f),
         thickness = 0.5.dp,
-        modifier  = Modifier.padding(start = 64.dp, end = 24.dp) // indent from icon
+        modifier = Modifier.padding(start = 72.dp, end = 16.dp)
     )
 }
 
@@ -187,6 +243,8 @@ private fun Divider() {
 @Composable
 private fun ToggleRow(
     icon: ImageVector,
+    iconBg: Color,
+    iconTint: Color,
     title: String,
     sub: String,
     checked: Boolean,
@@ -195,38 +253,51 @@ private fun ToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            icon, null,
-            tint     = if (checked) Indigo else MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f),
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(20.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                title,
-                style  = MaterialTheme.typography.bodyLarge,
-                color  = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                sub,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f)
+        // Colored Icon Plate
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(18.dp)
             )
         }
+        
+        Spacer(Modifier.width(16.dp))
+        
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = sub,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+        }
+        
         Switch(
-            checked         = checked,
+            checked = checked,
             onCheckedChange = onChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor    = Color.White,
-                checkedTrackColor    = Indigo,
-                uncheckedThumbColor  = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
-                uncheckedTrackColor  = MaterialTheme.colorScheme.surfaceVariant,
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Sapphire,
+                uncheckedThumbColor = TextMuted,
+                uncheckedTrackColor = GlassBorder,
                 uncheckedBorderColor = Color.Transparent,
-                checkedBorderColor   = Color.Transparent
+                checkedBorderColor = Color.Transparent
             )
         )
     }
@@ -237,6 +308,8 @@ private fun ToggleRow(
 @Composable
 private fun NavRow(
     icon: ImageVector,
+    iconBg: Color,
+    iconTint: Color,
     title: String,
     sub: String,
     onClick: () -> Unit
@@ -246,35 +319,49 @@ private fun NavRow(
             .fillMaxWidth()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication        = null,
-                onClick           = onClick
+                indication = null,
+                onClick = onClick
             )
-            .padding(horizontal = 24.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            icon, null,
-            tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f),
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(20.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                title,
-                style  = MaterialTheme.typography.bodyLarge,
-                color  = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                sub,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f)
+        // Colored Icon Plate
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(18.dp)
             )
         }
+        
+        Spacer(Modifier.width(16.dp))
+        
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = sub,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+        }
+        
         Icon(
-            Icons.Default.ChevronRight, null,
-            tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f),
-            modifier = Modifier.size(17.dp)
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = TextMuted,
+            modifier = Modifier.size(18.dp)
         )
     }
 }

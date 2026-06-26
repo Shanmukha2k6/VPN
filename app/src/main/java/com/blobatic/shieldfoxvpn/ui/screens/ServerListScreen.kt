@@ -3,6 +3,7 @@ package com.blobatic.shieldfoxvpn.ui.screens
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,62 +50,78 @@ fun ServerListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Servers",
+                        text = "VPN Locations",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextPrimary,
                         letterSpacing = (-0.5).sp
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .size(36.dp)
+                    ) {
                         Icon(
-                            Icons.Default.ArrowBack,
-                            "Back",
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.loadServers() }) {
+                    IconButton(
+                        onClick = { viewModel.loadServers() },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .size(36.dp)
+                    ) {
                         Icon(
-                            Icons.Default.Refresh, "Refresh",
-                            tint = Indigo,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh list",
+                            tint = Sapphire,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color.Transparent
                 )
             )
         }
     ) { padding ->
         Column(
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // ── Search ────────────────────────────────────────────────────────
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
+
+            // ── Glassmorphic Search Bar ──────────────────────────────────────
             TextField(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .border(0.5.dp, GlassBorder, RoundedCornerShape(14.dp)),
                 placeholder = {
                     Text(
-                        "Search…",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.35f),
+                        text = "Search gateways...",
+                        color = TextMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
                 leadingIcon = {
                     Icon(
-                        Icons.Default.Search, null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = TextSecondary,
                         modifier = Modifier.size(18.dp)
                     )
                 },
@@ -111,77 +129,80 @@ fun ServerListScreen(
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { query = "" }) {
                             Icon(
-                                Icons.Default.Clear, null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear search",
+                                tint = TextPrimary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 },
                 colors = TextFieldDefaults.colors(
-                    focusedTextColor           = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor         = MaterialTheme.colorScheme.onBackground,
-                    focusedContainerColor      = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor    = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor           = TextPrimary,
+                    unfocusedTextColor         = TextPrimary,
+                    focusedContainerColor      = SurfaceGlass,
+                    unfocusedContainerColor    = SurfaceGlass,
                     focusedIndicatorColor      = Color.Transparent,
                     unfocusedIndicatorColor    = Color.Transparent,
-                    cursorColor                = Indigo
+                    cursorColor                = Sapphire
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
                 singleLine = true
             )
+            
             Spacer(Modifier.height(16.dp))
 
             if (uiState.isLoadingServers) {
                 Box(Modifier.fillMaxSize(), Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
-                            color       = Indigo,
+                            color       = Sapphire,
                             strokeWidth = 2.dp,
-                            modifier    = Modifier.size(28.dp)
+                            modifier    = Modifier.size(32.dp)
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            "Loading…",
+                            "Analyzing network routing...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f)
+                            color = TextSecondary
                         )
                     }
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 32.dp)
+                    contentPadding = PaddingValues(bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ── Auto option ───────────────────────────────────────────
+                    // ── Auto Select (Smart Location) Card ─────────────────────
                     item {
-                        AutoRow(
+                        AutoCard(
                             isSelected = uiState.selectedServer == null,
                             onClick = { viewModel.selectServer(null); onBack() }
                         )
-                        Divider()
                     }
 
-                    // ── Section label ─────────────────────────────────────────
+                    // ── Locations Header ──────────────────────────────────────
                     if (filtered.isNotEmpty()) {
                         item {
                             Text(
-                                text = "LOCATIONS",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
+                                text = "AVAILABLE GATEWAYS",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextMuted,
                                 letterSpacing = 2.sp,
+                                fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(
                                     start = 24.dp, end = 24.dp,
-                                    top = 20.dp, bottom = 8.dp
+                                    top = 12.dp, bottom = 4.dp
                                 )
                             )
                         }
+
                         items(filtered, key = { it.id }) { server ->
-                            ServerRow(
+                            ServerCard(
                                 server     = server,
                                 isSelected = uiState.selectedServer?.id == server.id,
                                 onClick    = { viewModel.selectServer(server); onBack() }
                             )
-                            Divider()
                         }
                     }
                 }
@@ -190,139 +211,167 @@ fun ServerListScreen(
     }
 }
 
-// ─── Auto Row ─────────────────────────────────────────────────────────────────
+// ─── Auto (Smart) Option Card ─────────────────────────────────────────────────
 
 @Composable
-private fun AutoRow(isSelected: Boolean, onClick: () -> Unit) {
-    Row(
+private fun AutoCard(isSelected: Boolean, onClick: () -> Unit) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isSelected) Sapphire.copy(alpha = 0.05f) else SurfaceGlass)
+            .border(
+                width = 0.5.dp,
+                color = if (isSelected) Sapphire else GlassBorder,
+                shape = RoundedCornerShape(14.dp)
             )
-            .background(
-                if (isSelected) Indigo.copy(0.05f) else Color.Transparent
-            )
-            .padding(horizontal = 24.dp, vertical = 18.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(
-                    if (isSelected) Indigo.copy(0.12f)
-                    else MaterialTheme.colorScheme.surfaceVariant
-                ),
-            contentAlignment = Alignment.Center
+        Row(
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Default.Bolt, null,
-                tint     = if (isSelected) Indigo else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        Spacer(Modifier.width(16.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                "Auto Select",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                "Fastest available server",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f)
-            )
-        }
-        if (isSelected) {
-            Icon(Icons.Default.CheckCircle, null, tint = Indigo, modifier = Modifier.size(17.dp))
-        }
-    }
-}
-
-// ─── Server Row ───────────────────────────────────────────────────────────────
-
-@Composable
-private fun ServerRow(server: VpnServer, isSelected: Boolean, onClick: () -> Unit) {
-    val textColor by animateColorAsState(
-        targetValue = if (isSelected) Emerald else MaterialTheme.colorScheme.onBackground,
-        animationSpec = tween(250),
-        label = "tc"
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-            .background(if (isSelected) Emerald.copy(0.04f) else Color.Transparent)
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            countryFlag(server.countryCode),
-            fontSize = 22.sp,
-            modifier = Modifier.width(30.dp)
-        )
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                server.countryName,
-                style      = MaterialTheme.typography.bodyLarge,
-                color      = textColor,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-            )
-            if (server.city.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) Sapphire.copy(alpha = 0.15f) else GlassBorder),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Bolt,
+                    contentDescription = null,
+                    tint     = if (isSelected) Sapphire else TextSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
                 Text(
-                    server.city,
+                    text = "Smart Connection (Auto)",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isSelected) Sapphire else TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Route dynamically through the lowest latency nodes",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f)
+                    color = TextSecondary
+                )
+            }
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Sapphire,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
-        Spacer(Modifier.width(12.dp))
-        SignalBars(server.ping)
-        Spacer(Modifier.width(12.dp))
-        if (isSelected) {
-            Icon(Icons.Default.CheckCircle, null, tint = Emerald, modifier = Modifier.size(17.dp))
-        } else {
-            Icon(
-                Icons.Default.ChevronRight, null,
-                tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f),
-                modifier = Modifier.size(17.dp)
+    }
+}
+
+// ─── Server Card Capsule ──────────────────────────────────────────────────────
+
+@Composable
+private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Unit) {
+    val highlightColor by animateColorAsState(
+        targetValue = if (isSelected) NeonEmerald else TextPrimary,
+        animationSpec = tween(250),
+        label = "highlight"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isSelected) NeonEmerald.copy(alpha = 0.05f) else SurfaceGlass)
+            .border(
+                width = 0.5.dp,
+                color = if (isSelected) NeonEmerald else GlassBorder,
+                shape = RoundedCornerShape(14.dp)
             )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Flag
+            Text(
+                text = countryFlag(server.countryCode),
+                fontSize = 24.sp,
+                modifier = Modifier.width(32.dp)
+            )
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = server.countryName,
+                    style      = MaterialTheme.typography.bodyLarge,
+                    color      = highlightColor,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                )
+                if (server.city.isNotBlank()) {
+                    Text(
+                        text = server.city,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            
+            // Ping HUD
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val ping = server.ping.takeIf { it > 0 } ?: 45
+                Text(
+                    text = "${ping}ms",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = when {
+                        ping < 100 -> NeonEmerald
+                        ping < 200 -> Amber
+                        else       -> Rose
+                    },
+                    fontWeight = FontWeight.SemiBold
+                )
+                SignalBars(ping)
+            }
+
+            Spacer(Modifier.width(12.dp))
+            
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = NeonEmerald,
+                    modifier = Modifier.size(20.dp)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint     = TextMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }
 
-// ─── Hairline Divider ─────────────────────────────────────────────────────────
-
-@Composable
-private fun Divider() {
-    HorizontalDivider(
-        color     = MaterialTheme.colorScheme.outline.copy(0.35f),
-        thickness = 0.5.dp,
-        modifier  = Modifier.padding(horizontal = 24.dp)
-    )
-}
-
-// ─── Signal Bars ──────────────────────────────────────────────────────────────
+// ─── Custom Signal Bars ───────────────────────────────────────────────────────
 
 @Composable
 private fun SignalBars(ping: Int) {
     val (bars, color) = when {
-        ping == 0  -> 1 to MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f)
-        ping < 150 -> 4 to Emerald
-        ping < 250 -> 3 to Emerald
-        ping < 350 -> 2 to Amber
-        else       -> 1 to Amber
+        ping < 100 -> 4 to NeonEmerald
+        ping < 200 -> 3 to NeonEmerald
+        ping < 300 -> 2 to Amber
+        else       -> 1 to Rose
     }
     Row(
         verticalAlignment = Alignment.Bottom,
@@ -335,7 +384,7 @@ private fun SignalBars(ping: Int) {
                     .clip(RoundedCornerShape(1.dp))
                     .background(
                         if (i <= bars) color
-                        else MaterialTheme.colorScheme.outline.copy(0.35f)
+                        else GlassBorder
                     )
             )
         }
