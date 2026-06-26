@@ -112,21 +112,22 @@ private val LightScheme = lightColorScheme(
 
 @Composable
 fun ShieldFoxTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkScheme else LightScheme
+    // Force LightScheme and disable dark theme
+    val colorScheme = LightScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            val bg = if (darkTheme) SpaceBlack.toArgb() else Color(0xFFEEF2FF).toArgb()
+            val bg = Color(0xFFEEF2FF).toArgb()
             window.statusBarColor = bg
             window.navigationBarColor = bg
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars    = !darkTheme
-                isAppearanceLightNavigationBars = !darkTheme
+                isAppearanceLightStatusBars    = true
+                isAppearanceLightNavigationBars = true
             }
         }
     }

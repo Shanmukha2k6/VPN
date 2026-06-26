@@ -26,7 +26,6 @@ import com.blobatic.shieldfoxvpn.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
-    val isDark     by ThemeManager.isDarkTheme.collectAsState()
     var autoConn   by remember { mutableStateOf(false) }
     var kill       by remember { mutableStateOf(false) }
     var dns        by remember { mutableStateOf(true) }
@@ -138,16 +137,6 @@ fun SettingsScreen(onBack: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = currentSurface)
             ) {
                 Column {
-                    ToggleRow(
-                        icon = Icons.Default.LightMode,
-                        iconBg = Amber.copy(alpha = 0.12f),
-                        iconTint = Amber,
-                        title = "Light Mode",
-                        sub = "Switch color theme of the interface",
-                        checked = !isDark,
-                        onChange = { ThemeManager.setDarkTheme(!it) }
-                    )
-                    Divider()
                     ToggleRow(
                         icon = Icons.Default.Notifications,
                         iconBg = currentPrimary.copy(alpha = 0.12f),
