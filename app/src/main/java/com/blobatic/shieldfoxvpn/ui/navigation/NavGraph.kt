@@ -1,4 +1,4 @@
-﻿package com.blobatic.shieldfoxvpn.ui.navigation
+package com.blobatic.shieldfoxvpn.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -9,6 +9,7 @@ import com.blobatic.shieldfoxvpn.ui.screens.ServerListScreen
 import com.blobatic.shieldfoxvpn.ui.screens.SettingsScreen
 
 sealed class Screen(val route: String) {
+    object Loading : Screen("loading")
     object Home : Screen("home")
     object ServerList : Screen("servers")
     object Settings : Screen("settings")
@@ -22,8 +23,17 @@ fun VPNNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Loading.route
     ) {
+        composable(Screen.Loading.route) {
+            com.blobatic.shieldfoxvpn.ui.screens.LoadingScreen(
+                onLoadingComplete = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Loading.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Home.route) {
             HomeScreen(
                 onNavigateToServers = { navController.navigate(Screen.ServerList.route) },
