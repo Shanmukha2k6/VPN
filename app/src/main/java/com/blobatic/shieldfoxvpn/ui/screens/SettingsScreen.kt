@@ -178,7 +178,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconBg = currentOutline,
                         iconTint = currentOnBackground,
                         title = "System Information",
-                        sub = "ShieldFox Core Client v1.0.0",
+                        sub = "ShieldFox VPN Core Client v1.0.0",
                         onClick = {}
                     )
                     Divider()

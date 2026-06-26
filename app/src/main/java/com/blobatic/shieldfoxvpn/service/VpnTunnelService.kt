@@ -1,4 +1,4 @@
-﻿package com.blobatic.shieldfoxvpn.service
+package com.blobatic.shieldfoxvpn.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -340,7 +340,7 @@ class VpnTunnelService : VpnService() {
                 }
 
                 val builder = Builder()
-                    .setSession("ShieldFox - ${server.countryName} (Proxy)")
+                    .setSession("ShieldFox VPN - ${server.countryName} (Proxy)")
                     .addAddress("10.8.0.2", 24)
                     .addRoute("10.8.0.2", 32)
                     .setHttpProxy(proxyInfo)
@@ -454,7 +454,7 @@ class VpnTunnelService : VpnService() {
             PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ShieldFox")
+            .setContentTitle("ShieldFox VPN")
             .setContentText(message)
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentIntent(pendingIntent)

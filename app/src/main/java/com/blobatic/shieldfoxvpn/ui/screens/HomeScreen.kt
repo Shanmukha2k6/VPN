@@ -91,7 +91,7 @@ fun HomeScreen(
                         }
                         Spacer(Modifier.width(10.dp))
                         Text(
-                            text = "ShieldFox",
+                            text = "ShieldFox VPN",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
