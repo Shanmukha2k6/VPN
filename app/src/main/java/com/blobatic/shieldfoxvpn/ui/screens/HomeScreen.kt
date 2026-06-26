@@ -221,10 +221,11 @@ fun HomeScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = viewModel.formatTimer(uiState.connectedSeconds),
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 24.sp,
                         color = MaterialTheme.colorScheme.secondary,
-                        letterSpacing = 6.sp,
-                        fontWeight = FontWeight.Bold
+                        letterSpacing = 4.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }

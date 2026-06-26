@@ -66,6 +66,16 @@ fun LoadingScreen(
                 fontSize = 11.sp
             )
 
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = "Fast and secure VPN loading...",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF475569).copy(alpha = 0.7f), // Slate 600 subtext
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp
+            )
+
             Spacer(Modifier.height(36.dp))
 
             // Thin elegant loading line (width 120dp, height 2dp) that fills up once
