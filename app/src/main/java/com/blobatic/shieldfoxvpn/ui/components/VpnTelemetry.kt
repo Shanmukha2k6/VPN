@@ -111,97 +111,7 @@ fun VpnTelemetry(
             )
         }
 
-        // ── Technical Details Panel ───────────────────────────────────────────
-        AnimatedVisibility(
-            visible = isConnected,
-            enter = fadeIn(tween(500)) + expandVertically(tween(500)),
-            exit = fadeOut(tween(300)) + shrinkVertically(tween(300))
-        ) {
-            val connectedData = vpnState as? VpnState.Connected
-            val server = connectedData?.server
-            val virtualIp = connectedData?.virtualIp?.ifBlank { server?.ipAddress } ?: "10.8.0.2"
-            val protocolName = server?.protocol?.displayName ?: "WireGuard"
-            val serverPing = server?.ping?.takeIf { it > 0 } ?: 45
-            val loadValue = server?.load?.takeIf { it > 0 } ?: 34
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp))
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "CONNECTION TELEMETRY",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = currentOnSurfaceVariant.copy(alpha = 0.6f),
-                    letterSpacing = 1.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                TelemetryRow(label = "VIRTUAL IP", value = virtualIp)
-                TelemetryRow(label = "PROTOCOL", value = protocolName)
-                
-                // Server Load Bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "SERVER LOAD",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = currentOnSurfaceVariant,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "$loadValue%",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = currentOnBackground,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Box(
-                            modifier = Modifier
-                                .width(80.dp)
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(currentOutline)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(loadValue / 100f)
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(currentPrimary, currentSecondary)
-                                        )
-                                    )
-                            )
-                        }
-                    }
-                }
-
-                TelemetryRow(
-                    label = "PING / LATENCY",
-                    value = "$serverPing ms",
-                    valueColor = if (serverPing < 150) currentSecondary else Amber,
-                    showDot = true
-                )
-
-                TelemetryRow(
-                    label = "ENCRYPTION",
-                    value = if (protocolName.contains("WireGuard")) "ChaCha20-Poly1305" else "AES-256-GCM"
-                )
-            }
-        }
     }
 }
 
@@ -329,50 +239,7 @@ private fun SpeedCard(
     }
 }
 
-@Composable
-private fun TelemetryRow(
-    label: String,
-    value: String,
-    valueColor: Color = Color.Unspecified, // fallback to onBackground inside the text
-    showDot: Boolean = false
-) {
-    val currentOnBackground = MaterialTheme.colorScheme.onBackground
-    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-    val resolvedValueColor = if (valueColor == Color.Unspecified) currentOnBackground else valueColor
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = currentOnSurfaceVariant,
-            modifier = Modifier.weight(1f)
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            if (showDot) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(resolvedValueColor)
-                )
-            }
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodySmall,
-                color = resolvedValueColor,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
 
 private fun formatSpeed(bytes: Long): String {
     return when {
