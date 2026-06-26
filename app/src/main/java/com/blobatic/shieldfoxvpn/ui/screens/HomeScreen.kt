@@ -121,6 +121,15 @@ fun HomeScreen(
                     containerColor = Color.Transparent
                 )
             )
+        },
+        bottomBar = {
+            AdmobBanner(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .navigationBarsPadding()
+                    .padding(bottom = 4.dp)
+            )
         }
     ) { padding ->
 
@@ -136,7 +145,15 @@ fun HomeScreen(
             // ── Status Info ──────────────────────────────────────────────────
             StatusLabel(uiState.vpnState)
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(20.dp))
+
+            // ── Location Selector Card ─────────────────────────────────────────
+            LocationSelector(
+                server = uiState.selectedServer,
+                onClick = onNavigateToServers
+            )
+
+            Spacer(Modifier.height(24.dp))
 
             // ── Radar Canvas & Power Button ──────────────────────────────────
             Box(
@@ -267,14 +284,6 @@ fun HomeScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Location Selector Card ─────────────────────────────────────────
-            LocationSelector(
-                server = uiState.selectedServer,
-                onClick = onNavigateToServers
-            )
-
-            Spacer(Modifier.height(24.dp))
-
             // ── Quick Controls Chips ───────────────────────────────────────────
             QuickControls(
                 currentProtocol = uiState.selectedProtocol,
@@ -282,11 +291,6 @@ fun HomeScreen(
                 onProtocolClick = { showProtocolSheet = true },
                 onKillSwitchToggle = { killSwitchEnabled = !killSwitchEnabled }
             )
-
-            Spacer(Modifier.height(32.dp))
-
-            // ── Banner Ad ─────────────────────────────────────────────────────
-            AdmobBanner()
 
             // ── Error Banner ──────────────────────────────────────────────────
             val errorMsg = uiState.errorMessage
