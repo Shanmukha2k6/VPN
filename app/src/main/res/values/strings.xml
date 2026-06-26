@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WingerVpn</string>
+    <string name="status_connected">Protected</string>
+    <string name="status_disconnected">Unprotected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="notification_channel_name">VPN Status</string>
+    <string name="notification_channel_desc">Shows VPN connection status</string>
+</resources>
