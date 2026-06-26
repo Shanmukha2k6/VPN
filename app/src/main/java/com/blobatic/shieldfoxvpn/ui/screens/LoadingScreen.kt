@@ -1,12 +1,11 @@
 package com.blobatic.shieldfoxvpn.ui.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,10 +13,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,28 +30,29 @@ import kotlinx.coroutines.delay
 fun LoadingScreen(
     onLoadingComplete: () -> Unit
 ) {
-    // Pulse animation for the logo glow
-    val infiniteTransition = rememberInfiniteTransition(label = "logo_pulse")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
+    // Elegant, slow breathing logo opacity
+    val infiniteTransition = rememberInfiniteTransition(label = "logo_fade")
+    val logoAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.75f,
+        targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = EaseInOutSine),
+            animation = tween(1500, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "scale"
-    )
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.15f,
-        targetValue = 0.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowAlpha"
+        label = "logoAlpha"
     )
 
-    // Trigger navigation after loading delay
+    // Smooth sweeping progress for the minimal line loader
+    val sweepProgress by infiniteTransition.animateFloat(
+        initialValue = -0.3f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = EaseInOutQuad),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "sweepProgress"
+    )
+
     LaunchedEffect(Unit) {
         delay(2200)
         onLoadingComplete()
@@ -59,81 +61,73 @@ fun LoadingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xFF070913), // SpaceBlack
-                        Color(0xFF0F1322)  // SurfaceGlass dark base
-                    )
-                )
-            ),
+            .background(Color(0xFF070913)), // Flat elegant solid SpaceBlack
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo container with animated glow and scaling
-            Box(
-                contentAlignment = Alignment.Center,
+            // Centered circular logo
+            Image(
+                painter = painterResource(id = R.drawable.ic_splash_logo),
+                contentDescription = "ShieldFox Logo",
                 modifier = Modifier
-                    .size(160.dp)
-                    .scale(scale)
-            ) {
-                // Soft breathing background glow behind the logo
-                Box(
-                    modifier = Modifier
-                        .size(140.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-
-                // The circular launcher logo itself
-                Image(
-                    painter = painterResource(id = R.drawable.ic_splash_logo),
-                    contentDescription = "ShieldFox Logo",
-                    modifier = Modifier
-                        .size(110.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), CircleShape)
-                )
-            }
-
-            Spacer(Modifier.height(28.dp))
-
-            // Application Name
-            Text(
-                text = "ShieldFox VPN",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .alpha(logoAlpha)
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // Subtitle loading message
+            // Minimal, clean tracked-out title
             Text(
-                text = "Securing your connection gateways...",
+                text = "SHIELDFOX VPN",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                color = Color.White.copy(alpha = 0.85f),
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 4.sp,
+                fontSize = 12.sp
             )
 
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(36.dp))
 
-            // Smooth loading indicator
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.secondary,
-                strokeWidth = 2.5.dp,
-                modifier = Modifier.size(24.dp)
-            )
+            // Thin, futuristic elegant horizontal line loader (width 120dp, height 2dp)
+            val currentSecondary = MaterialTheme.colorScheme.secondary
+            Canvas(
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(2.dp)
+            ) {
+                val trackWidth = size.width
+                val trackHeight = size.height
+                
+                // Draw background track
+                drawRoundRect(
+                    color = Color(0xFF1E2640),
+                    size = size,
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(trackHeight / 2)
+                )
+                
+                // Draw sliding progress glow (clipped inside the track)
+                val pillWidth = trackWidth * 0.35f
+                val startX = (sweepProgress * (trackWidth + pillWidth)) - pillWidth
+                
+                clipRect {
+                    drawRoundRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                currentSecondary.copy(alpha = 0.9f),
+                                Color.Transparent
+                            )
+                        ),
+                        topLeft = Offset(startX, 0f),
+                        size = size.copy(width = pillWidth),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(trackHeight / 2)
+                    )
+                }
+            }
         }
     }
 }
