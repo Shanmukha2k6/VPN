@@ -1,7 +1,6 @@
 package com.blobatic.shieldfoxvpn.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -13,133 +12,118 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-// ─── Theme Manager Singleton ─────────────────────────────────────────────────
+// ─── Theme Manager ────────────────────────────────────────────────────────────
 
 object ThemeManager {
     private val _isDarkTheme = MutableStateFlow(true)
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
-
-    fun setDarkTheme(enabled: Boolean) {
-        _isDarkTheme.value = enabled
-    }
+    fun setDarkTheme(enabled: Boolean) { _isDarkTheme.value = enabled }
 }
 
-// ─── ShieldFox Color Palette ──────────────────────────────────────────────────
-// Primary accent: Electric Sky Blue — confident, technical, calm
-val AccentBlue      = Color(0xFF38BDF8)   // Sky-400
-val AccentBlueDim   = Color(0xFF0EA5E9)   // Sky-500 (hover / pressed)
-val AccentBlueGlow  = Color(0x2038BDF8)   // Glow ring alpha
+// ─── Palette ──────────────────────────────────────────────────────────────────
+// Philosophy: one strong accent, maximum restraint everywhere else.
 
-// Secure state: Emerald green
-val SecureGreen     = Color(0xFF22C55E)   // Green-500
-val SecureGreenDim  = Color(0xFF16A34A)   // Green-600
-val SecureGreenGlow = Color(0x2022C55E)
+// Accent — electric indigo/violet. Unique in the VPN space, premium feel.
+val Indigo       = Color(0xFF818CF8)   // indigo-400
+val IndigoDim    = Color(0xFF6366F1)   // indigo-500
+val IndigoSubtle = Color(0x18818CF8)   // indigo glow
 
-// Neutral semantic
-val ErrorRed        = Color(0xFFEF4444)   // Red-500
-val WarningAmber    = Color(0xFFF59E0B)   // Amber-400
-val InfoCyan        = Color(0xFF22D3EE)   // Cyan-400
+// Semantic states
+val Emerald      = Color(0xFF34D399)   // emerald-400  — Connected / secure
+val EmeraldDim   = Color(0xFF10B981)   // emerald-500
+val EmeraldSubtle= Color(0x1534D399)
 
-// ─── Dark Canvas ──────────────────────────────────────────────────────────────
-// Near-black with a faint cool undertone — not pure black, premium depth
-val BgDark          = Color(0xFF0D0F14)   // Deep canvas
-val SurfaceDark     = Color(0xFF161B22)   // GitHub-dark-inspired
-val CardDark        = Color(0xFF1E2430)   // Elevated card
-val CardDarkBorder  = Color(0xFF262D3A)   // Subtle card border
-val DividerDark     = Color(0xFF1F2937)   // Inter-row divider
+val Amber        = Color(0xFFFBBF24)   // amber-400    — Connecting / caution
+val Rose         = Color(0xFFF87171)   // rose-400     — Error
 
-// ─── Text ─────────────────────────────────────────────────────────────────────
-val TextPrimary     = Color(0xFFF0F4FF)   // Slightly warm white
-val TextSecondary   = Color(0xFF8B96A9)   // Cool-gray muted
-val TextDisabled    = Color(0xFF3D4656)
+// Dark canvas — near-black with a hair of cool indigo tint
+val Canvas       = Color(0xFF09090E)   // deepest background
+val Surface1     = Color(0xFF111318)   // cards / sheets
+val Surface2     = Color(0xFF1A1D27)   // elevated elements
+val Border       = Color(0xFF22263A)   // hairline separators
 
-// ─── Light Canvas ──────────────────────────────────────────────────────────────
-val BgLight         = Color(0xFFF5F8FF)
-val SurfaceLight    = Color(0xFFFFFFFF)
-val CardLight       = Color(0xFFEFF3FA)
+// Text
+val White        = Color(0xFFFFFFFF)
+val White60      = Color(0x99FFFFFF)   // 60% white
+val White35      = Color(0x59FFFFFF)   // 35% white
+val White15      = Color(0x26FFFFFF)   // 15% white
 
 // ─── Color Schemes ────────────────────────────────────────────────────────────
 
-private val DarkColorScheme = darkColorScheme(
-    primary            = AccentBlue,
-    onPrimary          = Color(0xFF0A2E44),
-    primaryContainer   = Color(0xFF103A54),
-    onPrimaryContainer = AccentBlue,
+private val DarkScheme = darkColorScheme(
+    primary              = Indigo,
+    onPrimary            = Color(0xFF1E1B4B),
+    primaryContainer     = Color(0xFF312E81),
+    onPrimaryContainer   = Indigo,
 
-    secondary          = SecureGreen,
-    onSecondary        = Color(0xFF052E16),
-    secondaryContainer = Color(0xFF14532D),
-    onSecondaryContainer = SecureGreen,
+    secondary            = Emerald,
+    onSecondary          = Color(0xFF022C22),
+    secondaryContainer   = Color(0xFF064E3B),
+    onSecondaryContainer = Emerald,
 
-    tertiary           = InfoCyan,
-    onTertiary         = Color(0xFF083344),
+    tertiary             = Amber,
+    onTertiary           = Color(0xFF3B2000),
 
-    background         = BgDark,
-    onBackground       = TextPrimary,
+    background           = Canvas,
+    onBackground         = White,
 
-    surface            = SurfaceDark,
-    onSurface          = TextPrimary,
-    surfaceVariant     = CardDark,
-    onSurfaceVariant   = TextSecondary,
+    surface              = Surface1,
+    onSurface            = White,
+    surfaceVariant       = Surface2,
+    onSurfaceVariant     = White60,
 
-    error              = ErrorRed,
-    onError            = Color.White,
-    errorContainer     = Color(0xFF3B0A0A),
-    onErrorContainer   = Color(0xFFFCA5A5),
+    error                = Rose,
+    onError              = White,
+    errorContainer       = Color(0xFF3B0A0A),
+    onErrorContainer     = Color(0xFFFCA5A5),
 
-    outline            = CardDarkBorder,
-    outlineVariant     = DividerDark,
-
-    inverseSurface     = TextPrimary,
-    inverseOnSurface   = BgDark,
+    outline              = Border,
+    outlineVariant       = Color(0xFF161920),
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary            = AccentBlueDim,
-    onPrimary          = Color.White,
-    primaryContainer   = Color(0xFFDBEFFD),
-    onPrimaryContainer = Color(0xFF0369A1),
+private val LightScheme = lightColorScheme(
+    primary              = IndigoDim,
+    onPrimary            = White,
+    primaryContainer     = Color(0xFFEEF2FF),
+    onPrimaryContainer   = Color(0xFF3730A3),
 
-    secondary          = SecureGreenDim,
-    onSecondary        = Color.White,
-    secondaryContainer = Color(0xFFDCFCE7),
-    onSecondaryContainer = Color(0xFF15803D),
+    secondary            = EmeraldDim,
+    onSecondary          = White,
+    secondaryContainer   = Color(0xFFD1FAE5),
+    onSecondaryContainer = Color(0xFF065F46),
 
-    background         = BgLight,
-    onBackground       = Color(0xFF0F172A),
+    background           = Color(0xFFF8F9FF),
+    onBackground         = Color(0xFF0F0F1A),
 
-    surface            = SurfaceLight,
-    onSurface          = Color(0xFF0F172A),
-    surfaceVariant     = CardLight,
-    onSurfaceVariant   = Color(0xFF475569),
+    surface              = White,
+    onSurface            = Color(0xFF0F0F1A),
+    surfaceVariant       = Color(0xFFF0F1FF),
+    onSurfaceVariant     = Color(0xFF4B5280),
 
-    error              = ErrorRed,
-    onError            = Color.White,
-    errorContainer     = Color(0xFFFEE2E2),
-    onErrorContainer   = Color(0xFF991B1B),
-
-    outline            = Color(0xFFCBD5E1),
-    outlineVariant     = Color(0xFFE2E8F0)
+    error                = Rose,
+    onError              = White,
+    outline              = Color(0xFFDDE1F5),
+    outlineVariant       = Color(0xFFEEF0FF),
 )
 
-// ─── Theme Builder ────────────────────────────────────────────────────────────
+// ─── Theme ────────────────────────────────────────────────────────────────────
 
 @Composable
 fun ShieldFoxTheme(
     darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = if (darkTheme) DarkScheme else LightScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            val barColor = if (darkTheme) BgDark.toArgb() else BgLight.toArgb()
-            window.statusBarColor = barColor
-            window.navigationBarColor = barColor
+            val bg = if (darkTheme) Canvas.toArgb() else Color(0xFFF8F9FF).toArgb()
+            window.statusBarColor = bg
+            window.navigationBarColor = bg
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightStatusBars    = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme
             }
         }
@@ -147,7 +131,7 @@ fun ShieldFoxTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = ShieldFoxTypography,
-        content = content
+        typography  = ShieldFoxTypography,
+        content     = content
     )
 }

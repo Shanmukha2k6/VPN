@@ -3,8 +3,8 @@ package com.blobatic.shieldfoxvpn.ui.screens
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,10 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.blobatic.shieldfoxvpn.data.model.VpnServer
-import com.blobatic.shieldfoxvpn.ui.theme.AccentBlue
-import com.blobatic.shieldfoxvpn.ui.theme.ErrorRed
-import com.blobatic.shieldfoxvpn.ui.theme.SecureGreen
-import com.blobatic.shieldfoxvpn.ui.theme.WarningAmber
+import com.blobatic.shieldfoxvpn.ui.theme.*
 import com.blobatic.shieldfoxvpn.viewmodel.VpnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,12 +34,12 @@ fun ServerListScreen(
     viewModel: VpnViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var searchQuery by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("") }
 
-    val filteredServers = uiState.servers.filter { server ->
-        searchQuery.isBlank() ||
-        server.countryName.contains(searchQuery, ignoreCase = true) ||
-        server.city.contains(searchQuery, ignoreCase = true)
+    val filtered = uiState.servers.filter { s ->
+        query.isBlank() ||
+        s.countryName.contains(query, ignoreCase = true) ||
+        s.city.contains(query, ignoreCase = true)
     }
 
     Scaffold(
@@ -52,48 +48,31 @@ fun ServerListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Choose Server",
+                        "Servers",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.titleLarge
+                        letterSpacing = (-0.5).sp
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            "Back",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.loadServers() }) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(AccentBlue.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Refresh,
-                                contentDescription = "Refresh",
-                                tint = AccentBlue,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                        Icon(
+                            Icons.Default.Refresh, "Refresh",
+                            tint = Indigo,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(Modifier.width(4.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -102,34 +81,35 @@ fun ServerListScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // ── Search bar ────────────────────────────────────────────────────
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+            // ── Search ────────────────────────────────────────────────────────
+            Spacer(Modifier.height(4.dp))
+            TextField(
+                value = query,
+                onValueChange = { query = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp),
                 placeholder = {
                     Text(
-                        "Search country or city…",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        "Search…",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.35f),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search, null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
                         modifier = Modifier.size(18.dp)
                     )
                 },
                 trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
                             Icon(
                                 Icons.Default.Clear, null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -138,274 +118,224 @@ fun ServerListScreen(
                         }
                     }
                 },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    focusedBorderColor = AccentBlue.copy(alpha = 0.6f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    cursorColor = AccentBlue,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor           = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor         = MaterialTheme.colorScheme.onBackground,
+                    focusedContainerColor      = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor    = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor      = Color.Transparent,
+                    unfocusedIndicatorColor    = Color.Transparent,
+                    cursorColor                = Indigo
                 ),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 singleLine = true
             )
+            Spacer(Modifier.height(16.dp))
 
             if (uiState.isLoadingServers) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
-                            color = AccentBlue,
-                            strokeWidth = 2.5.dp,
-                            modifier = Modifier.size(32.dp)
+                            color       = Indigo,
+                            strokeWidth = 2.dp,
+                            modifier    = Modifier.size(28.dp)
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(12.dp))
                         Text(
-                            "Fetching secure servers…",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
+                            "Loading…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f)
                         )
                     }
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                    contentPadding = PaddingValues(bottom = 32.dp)
                 ) {
-                    // Auto-select option
+                    // ── Auto option ───────────────────────────────────────────
                     item {
-                        AutoServerCard(
+                        AutoRow(
                             isSelected = uiState.selectedServer == null,
-                            onClick = {
-                                viewModel.selectServer(null)
-                                onBack()
-                            }
+                            onClick = { viewModel.selectServer(null); onBack() }
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Divider()
                     }
 
-                    // Locations header + list
-                    if (filteredServers.isNotEmpty()) {
+                    // ── Section label ─────────────────────────────────────────
+                    if (filtered.isNotEmpty()) {
                         item {
                             Text(
-                                text = "LOCATIONS — ${filteredServers.size}".uppercase(),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.5.sp,
-                                modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                                text = "LOCATIONS",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
+                                letterSpacing = 2.sp,
+                                modifier = Modifier.padding(
+                                    start = 24.dp, end = 24.dp,
+                                    top = 20.dp, bottom = 8.dp
+                                )
                             )
                         }
-
-                        // Group servers in a single card
-                        item {
-                            Card(
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                ),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp, MaterialTheme.colorScheme.outline
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                filteredServers.forEachIndexed { index, server ->
-                                    ServerRow(
-                                        server = server,
-                                        isSelected = uiState.selectedServer?.id == server.id,
-                                        onClick = {
-                                            viewModel.selectServer(server)
-                                            onBack()
-                                        }
-                                    )
-                                    if (index < filteredServers.lastIndex) {
-                                        HorizontalDivider(
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            thickness = 0.5.dp,
-                                            modifier = Modifier.padding(horizontal = 16.dp)
-                                        )
-                                    }
-                                }
-                            }
+                        items(filtered, key = { it.id }) { server ->
+                            ServerRow(
+                                server     = server,
+                                isSelected = uiState.selectedServer?.id == server.id,
+                                onClick    = { viewModel.selectServer(server); onBack() }
+                            )
+                            Divider()
                         }
                     }
-
-                    item { Spacer(Modifier.height(24.dp)) }
                 }
             }
         }
     }
 }
 
-// ─── Auto Server Card ─────────────────────────────────────────────────────────
+// ─── Auto Row ─────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AutoServerCard(isSelected: Boolean, onClick: () -> Unit) {
-    Card(
+private fun AutoRow(isSelected: Boolean, onClick: () -> Unit) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                AccentBlue.copy(alpha = 0.08f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            width = if (isSelected) 1.5.dp else 1.dp,
-            brush = if (isSelected)
-                Brush.horizontalGradient(listOf(AccentBlue.copy(0.7f), SecureGreen.copy(0.4f)))
-            else
-                Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.outline, MaterialTheme.colorScheme.outline))
-        )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+            .background(
+                if (isSelected) Indigo.copy(0.05f) else Color.Transparent
+            )
+            .padding(horizontal = 24.dp, vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isSelected) Indigo.copy(0.12f)
+                    else MaterialTheme.colorScheme.surfaceVariant
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isSelected) AccentBlue.copy(alpha = 0.15f)
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Bolt,
-                    contentDescription = null,
-                    tint = if (isSelected) AccentBlue else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Spacer(Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Auto Select",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "Fastest available server",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            if (isSelected) {
-                Icon(
-                    Icons.Default.CheckCircle,
-                    null,
-                    tint = AccentBlue,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                Icons.Default.Bolt, null,
+                tint     = if (isSelected) Indigo else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                "Auto Select",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Fastest available server",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f)
+            )
+        }
+        if (isSelected) {
+            Icon(Icons.Default.CheckCircle, null, tint = Indigo, modifier = Modifier.size(17.dp))
         }
     }
 }
 
-// ─── Server Row (inside grouped Card) ────────────────────────────────────────
+// ─── Server Row ───────────────────────────────────────────────────────────────
 
 @Composable
-private fun ServerRow(
-    server: VpnServer,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+private fun ServerRow(server: VpnServer, isSelected: Boolean, onClick: () -> Unit) {
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) SecureGreen else MaterialTheme.colorScheme.onBackground,
-        animationSpec = tween(300),
-        label = "textColor"
+        targetValue = if (isSelected) Emerald else MaterialTheme.colorScheme.onBackground,
+        animationSpec = tween(250),
+        label = "tc"
     )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .background(
-                if (isSelected) SecureGreen.copy(alpha = 0.04f) else Color.Transparent
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
             )
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+            .background(if (isSelected) Emerald.copy(0.04f) else Color.Transparent)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Flag
         Text(
-            text = countryFlag(server.countryCode),
-            fontSize = 24.sp,
-            modifier = Modifier.size(32.dp)
+            countryFlag(server.countryCode),
+            fontSize = 22.sp,
+            modifier = Modifier.width(30.dp)
         )
         Spacer(Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
+        Column(Modifier.weight(1f)) {
             Text(
-                text = server.countryName,
-                color = textColor,
-                style = MaterialTheme.typography.bodyLarge,
+                server.countryName,
+                style      = MaterialTheme.typography.bodyLarge,
+                color      = textColor,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
             if (server.city.isNotBlank()) {
                 Text(
-                    text = server.city,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
+                    server.city,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f)
                 )
             }
         }
-
-        // Signal bars
-        SignalBars(ping = server.ping)
-
-        Spacer(Modifier.width(14.dp))
-
-        // Check or chevron
+        Spacer(Modifier.width(12.dp))
+        SignalBars(server.ping)
+        Spacer(Modifier.width(12.dp))
         if (isSelected) {
-            Icon(
-                Icons.Default.CheckCircle,
-                null,
-                tint = SecureGreen,
-                modifier = Modifier.size(18.dp)
-            )
+            Icon(Icons.Default.CheckCircle, null, tint = Emerald, modifier = Modifier.size(17.dp))
         } else {
             Icon(
-                Icons.Default.ChevronRight,
-                null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                modifier = Modifier.size(18.dp)
+                Icons.Default.ChevronRight, null,
+                tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f),
+                modifier = Modifier.size(17.dp)
             )
         }
     }
 }
 
+// ─── Hairline Divider ─────────────────────────────────────────────────────────
+
+@Composable
+private fun Divider() {
+    HorizontalDivider(
+        color     = MaterialTheme.colorScheme.outline.copy(0.35f),
+        thickness = 0.5.dp,
+        modifier  = Modifier.padding(horizontal = 24.dp)
+    )
+}
+
 // ─── Signal Bars ──────────────────────────────────────────────────────────────
 
 @Composable
-private fun SignalBars(ping: Int, modifier: Modifier = Modifier) {
+private fun SignalBars(ping: Int) {
     val (bars, color) = when {
-        ping == 0   -> 1 to MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-        ping < 80   -> 4 to SecureGreen
-        ping < 150  -> 4 to SecureGreen
-        ping < 220  -> 3 to SecureGreen
-        ping < 300  -> 2 to WarningAmber
-        else        -> 1 to WarningAmber
+        ping == 0  -> 1 to MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f)
+        ping < 150 -> 4 to Emerald
+        ping < 250 -> 3 to Emerald
+        ping < 350 -> 2 to Amber
+        else       -> 1 to Amber
     }
-
     Row(
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = modifier
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         for (i in 1..4) {
-            val isActive = i <= bars
             Box(
                 modifier = Modifier
-                    .size(width = 3.dp, height = (i * 3.5 + 3).dp)
+                    .size(width = 3.dp, height = (i * 3 + 4).dp)
                     .clip(RoundedCornerShape(1.dp))
                     .background(
-                        if (isActive) color
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        if (i <= bars) color
+                        else MaterialTheme.colorScheme.outline.copy(0.35f)
                     )
             )
         }
@@ -414,9 +344,7 @@ private fun SignalBars(ping: Int, modifier: Modifier = Modifier) {
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
-private fun countryFlag(countryCode: String): String {
+private fun countryFlag(code: String): String {
     val offset = 0x1F1E6 - 'A'.code
-    return countryCode.uppercase().map {
-        Character.toChars(it.code + offset).concatToString()
-    }.joinToString("")
+    return code.uppercase().map { Character.toChars(it.code + offset).concatToString() }.joinToString("")
 }

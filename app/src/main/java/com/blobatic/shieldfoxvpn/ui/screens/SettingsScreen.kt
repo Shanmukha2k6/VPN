@@ -1,11 +1,9 @@
 package com.blobatic.shieldfoxvpn.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,24 +11,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.blobatic.shieldfoxvpn.ui.theme.AccentBlue
-import com.blobatic.shieldfoxvpn.ui.theme.SecureGreen
+import com.blobatic.shieldfoxvpn.ui.theme.Emerald
+import com.blobatic.shieldfoxvpn.ui.theme.Indigo
 import com.blobatic.shieldfoxvpn.ui.theme.ThemeManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
-    val isDarkTheme by ThemeManager.isDarkTheme.collectAsState()
-    var autoConnect   by remember { mutableStateOf(false) }
-    var killSwitch    by remember { mutableStateOf(false) }
-    var dnsLeak       by remember { mutableStateOf(true) }
-    var notifications by remember { mutableStateOf(true) }
+    val isDark     by ThemeManager.isDarkTheme.collectAsState()
+    var autoConn   by remember { mutableStateOf(false) }
+    var kill       by remember { mutableStateOf(false) }
+    var dns        by remember { mutableStateOf(true) }
+    var notifs     by remember { mutableStateOf(true) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -38,27 +35,20 @@ fun SettingsScreen(onBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        "Settings",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.titleLarge
+                        letterSpacing = (-0.5).sp
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowBack, null,
-                                tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                        Icon(
+                            Icons.Default.ArrowBack, null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -72,199 +62,169 @@ fun SettingsScreen(onBack: () -> Unit) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(Modifier.height(4.dp))
 
-            // ── Connection section ──────────────────────────────────────────
-            SettingsGroup(title = "Connection") {
-                SettingsToggleRow(
-                    icon = Icons.Default.Wifi,
-                    iconTint = AccentBlue,
-                    title = "Auto Connect",
-                    subtitle = "Connect VPN on network change",
-                    checked = autoConnect,
-                    onCheckedChange = { autoConnect = it }
-                )
-                SettingsDivider()
-                SettingsToggleRow(
-                    icon = Icons.Default.Block,
-                    iconTint = AccentBlue,
-                    title = "Kill Switch",
-                    subtitle = "Block internet if VPN disconnects",
-                    checked = killSwitch,
-                    onCheckedChange = { killSwitch = it }
-                )
-                SettingsDivider()
-                SettingsToggleRow(
-                    icon = Icons.Default.Security,
-                    iconTint = SecureGreen,
-                    title = "DNS Leak Protection",
-                    subtitle = "Route DNS through the secure tunnel",
-                    checked = dnsLeak,
-                    onCheckedChange = { dnsLeak = it }
-                )
-            }
+            Spacer(Modifier.height(8.dp))
 
-            // ── Appearance section ─────────────────────────────────────────
-            SettingsGroup(title = "Appearance") {
-                SettingsToggleRow(
-                    icon = Icons.Default.LightMode,
-                    iconTint = MaterialTheme.colorScheme.tertiary,
-                    title = "Light Theme",
-                    subtitle = "Switch to light color scheme",
-                    checked = !isDarkTheme,
-                    onCheckedChange = { ThemeManager.setDarkTheme(!it) }
-                )
-                SettingsDivider()
-                SettingsToggleRow(
-                    icon = Icons.Default.Notifications,
-                    iconTint = AccentBlue,
-                    title = "Notifications",
-                    subtitle = "Show VPN status notifications",
-                    checked = notifications,
-                    onCheckedChange = { notifications = it }
-                )
-            }
+            // ── Connection ────────────────────────────────────────────────────
+            SectionLabel("Connection")
 
-            // ── About section ──────────────────────────────────────────────
-            SettingsGroup(title = "About") {
-                SettingsNavRow(
-                    icon = Icons.Default.Info,
-                    iconTint = AccentBlue,
-                    title = "About ShieldFox",
-                    subtitle = "Version 1.0.0",
-                    onClick = {}
-                )
-                SettingsDivider()
-                SettingsNavRow(
-                    icon = Icons.Default.PrivacyTip,
-                    iconTint = SecureGreen,
-                    title = "Privacy Policy",
-                    subtitle = "View how we handle your data",
-                    onClick = {}
-                )
-                SettingsDivider()
-                SettingsNavRow(
-                    icon = Icons.Default.Gavel,
-                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    title = "Terms of Service",
-                    subtitle = "Read our terms and conditions",
-                    onClick = {}
-                )
-            }
-
-            // ── Footer ─────────────────────────────────────────────────────
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "ShieldFox v1.0.0 • Protected by Blobatic",
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                style = MaterialTheme.typography.labelSmall,
-                letterSpacing = 0.5.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ToggleRow(
+                icon    = Icons.Default.Wifi,
+                title   = "Auto Connect",
+                sub     = "Connect on network change",
+                checked = autoConn,
+                onChange = { autoConn = it }
             )
-            Spacer(Modifier.height(16.dp))
+            Divider()
+            ToggleRow(
+                icon    = Icons.Default.Block,
+                title   = "Kill Switch",
+                sub     = "Block traffic if VPN drops",
+                checked = kill,
+                onChange = { kill = it }
+            )
+            Divider()
+            ToggleRow(
+                icon    = Icons.Default.Security,
+                title   = "DNS Leak Protection",
+                sub     = "Route DNS through tunnel",
+                checked = dns,
+                onChange = { dns = it }
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // ── Appearance ────────────────────────────────────────────────────
+            SectionLabel("Appearance")
+
+            ToggleRow(
+                icon    = Icons.Default.LightMode,
+                title   = "Light Mode",
+                sub     = "Switch color scheme",
+                checked = !isDark,
+                onChange = { ThemeManager.setDarkTheme(!it) }
+            )
+            Divider()
+            ToggleRow(
+                icon    = Icons.Default.Notifications,
+                title   = "Notifications",
+                sub     = "VPN status alerts",
+                checked = notifs,
+                onChange = { notifs = it }
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // ── About ─────────────────────────────────────────────────────────
+            SectionLabel("About")
+
+            NavRow(
+                icon  = Icons.Default.Info,
+                title = "About ShieldFox",
+                sub   = "Version 1.0.0",
+                onClick = {}
+            )
+            Divider()
+            NavRow(
+                icon  = Icons.Default.PrivacyTip,
+                title = "Privacy Policy",
+                sub   = "How we handle your data",
+                onClick = {}
+            )
+            Divider()
+            NavRow(
+                icon  = Icons.Default.Gavel,
+                title = "Terms of Service",
+                sub   = "Terms & conditions",
+                onClick = {}
+            )
+
+            Spacer(Modifier.height(40.dp))
+
+            Text(
+                "ShieldFox • by Blobatic",
+                style  = MaterialTheme.typography.labelMedium,
+                color  = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f),
+                letterSpacing = 1.sp,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 24.dp)
+            )
         }
     }
 }
 
-// ─── Settings Group ───────────────────────────────────────────────────────────
+// ─── Section Label ────────────────────────────────────────────────────────────
 
 @Composable
-private fun SettingsGroup(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Column {
-        Text(
-            text = title.uppercase(),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 0.dp)
+private fun SectionLabel(text: String) {
+    Text(
+        text          = text.uppercase(),
+        style         = MaterialTheme.typography.labelMedium,
+        color         = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
+        letterSpacing = 2.sp,
+        modifier      = Modifier.padding(
+            start = 24.dp, end = 24.dp,
+            top = 0.dp, bottom = 8.dp
         )
-        Spacer(Modifier.height(8.dp))
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp, MaterialTheme.colorScheme.outline
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(content = content)
-        }
-    }
+    )
 }
 
-// ─── Divider ──────────────────────────────────────────────────────────────────
+// ─── Hairline Divider ─────────────────────────────────────────────────────────
 
 @Composable
-private fun SettingsDivider() {
+private fun Divider() {
     HorizontalDivider(
-        color = MaterialTheme.colorScheme.outlineVariant,
+        color     = MaterialTheme.colorScheme.outline.copy(0.3f),
         thickness = 0.5.dp,
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier  = Modifier.padding(start = 64.dp, end = 24.dp) // indent from icon
     )
 }
 
 // ─── Toggle Row ───────────────────────────────────────────────────────────────
 
 @Composable
-private fun SettingsToggleRow(
+private fun ToggleRow(
     icon: ImageVector,
-    iconTint: Color,
     title: String,
-    subtitle: String,
+    sub: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onChange: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 13.dp),
+            .padding(horizontal = 24.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(iconTint.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                icon, null,
-                tint = iconTint,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        Spacer(Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
+        Icon(
+            icon, null,
+            tint     = if (checked) Indigo else MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(20.dp))
+        Column(Modifier.weight(1f)) {
             Text(
                 title,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge,
+                style  = MaterialTheme.typography.bodyLarge,
+                color  = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Medium
             )
             Text(
-                subtitle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                sub,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f)
             )
         }
-        Spacer(Modifier.width(8.dp))
         Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
+            checked         = checked,
+            onCheckedChange = onChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor   = Color.White,
-                checkedTrackColor   = AccentBlue,
-                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f),
-                uncheckedTrackColor = MaterialTheme.colorScheme.outline,
+                checkedThumbColor    = Color.White,
+                checkedTrackColor    = Indigo,
+                uncheckedThumbColor  = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
+                uncheckedTrackColor  = MaterialTheme.colorScheme.surfaceVariant,
                 uncheckedBorderColor = Color.Transparent,
                 checkedBorderColor   = Color.Transparent
             )
@@ -275,52 +235,46 @@ private fun SettingsToggleRow(
 // ─── Nav Row ──────────────────────────────────────────────────────────────────
 
 @Composable
-private fun SettingsNavRow(
+private fun NavRow(
     icon: ImageVector,
-    iconTint: Color,
     title: String,
-    subtitle: String,
+    sub: String,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 13.dp),
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication        = null,
+                onClick           = onClick
+            )
+            .padding(horizontal = 24.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(iconTint.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                icon, null,
-                tint = iconTint,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        Spacer(Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
+        Icon(
+            icon, null,
+            tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(20.dp))
+        Column(Modifier.weight(1f)) {
             Text(
                 title,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge,
+                style  = MaterialTheme.typography.bodyLarge,
+                color  = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Medium
             )
             Text(
-                subtitle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                sub,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.45f)
             )
         }
         Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-            modifier = Modifier.size(18.dp)
+            Icons.Default.ChevronRight, null,
+            tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f),
+            modifier = Modifier.size(17.dp)
         )
     }
 }

@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -19,216 +18,186 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.blobatic.shieldfoxvpn.data.model.VpnState
-import com.blobatic.shieldfoxvpn.ui.theme.AccentBlue
-import com.blobatic.shieldfoxvpn.ui.theme.AccentBlueGlow
-import com.blobatic.shieldfoxvpn.ui.theme.ErrorRed
-import com.blobatic.shieldfoxvpn.ui.theme.SecureGreen
-import com.blobatic.shieldfoxvpn.ui.theme.SecureGreenGlow
-import com.blobatic.shieldfoxvpn.ui.theme.WarningAmber
+import com.blobatic.shieldfoxvpn.ui.theme.Amber
+import com.blobatic.shieldfoxvpn.ui.theme.Canvas
+import com.blobatic.shieldfoxvpn.ui.theme.Emerald
+import com.blobatic.shieldfoxvpn.ui.theme.Indigo
+import com.blobatic.shieldfoxvpn.ui.theme.Rose
+import com.blobatic.shieldfoxvpn.ui.theme.Surface1
+import com.blobatic.shieldfoxvpn.ui.theme.White15
 
 /**
- * ShieldFox Power Button — premium tactile VPN connect/disconnect control.
+ * ShieldFox — Minimalist Power Button.
  *
- * Visual states:
- *  • Idle        → muted gray ring, ghost icon
- *  • Connecting  → spinning electric-blue arc, pulsing ring
- *  • Connected   → emerald glow with steady solid ring, shadow bloom
- *  • Error       → red warning ring
+ * The button is a clean circle. The ring IS the state indicator:
+ *   Idle       → dim gray ring, ghost power icon
+ *   Connecting → spinning indigo arc (dashed feel)
+ *   Connected  → solid emerald ring, breathing glow
+ *   Error      → rose ring
+ *
+ * No gradient plates, no halo boxes — just the ring and the icon.
  */
 @Composable
 fun VpnPowerButton(
     vpnState: VpnState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 160.dp
+    size: Dp = 180.dp
 ) {
-    val isConnected   = vpnState is VpnState.Connected
-    val isConnecting  = vpnState is VpnState.Connecting || vpnState is VpnState.Disconnecting
-    val isError       = vpnState is VpnState.Error
+    val isConnected  = vpnState is VpnState.Connected
+    val isConnecting = vpnState is VpnState.Connecting || vpnState is VpnState.Disconnecting
+    val isError      = vpnState is VpnState.Error
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    // Smooth tactile press scale
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.93f else 1.0f,
+    // Press shrink
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            stiffness    = Spring.StiffnessMediumLow
         ),
-        label = "pressScale"
+        label = "press"
     )
 
-    // State color — drives icon tint, ring, shadow
-    val stateColor by animateColorAsState(
+    // Ring + icon color
+    val ringColor by animateColorAsState(
         targetValue = when {
-            isConnected  -> SecureGreen
-            isError      -> ErrorRed
-            isConnecting -> AccentBlue
-            else         -> Color(0xFF3D4A5C) // Idle ghost
+            isConnected  -> Emerald
+            isError      -> Rose
+            isConnecting -> Indigo
+            else         -> Color(0xFF2A2E3F)    // dim idle ring
         },
-        animationSpec = tween(500),
-        label = "stateColor"
+        animationSpec = tween(600),
+        label = "ring"
     )
 
-    // Connected halo glow color
-    val glowColor by animateColorAsState(
+    val iconColor by animateColorAsState(
         targetValue = when {
-            isConnected -> SecureGreenGlow
-            isError     -> ErrorRed.copy(alpha = 0.15f)
-            else        -> Color.Transparent
+            isConnected  -> Emerald
+            isError      -> Rose
+            isConnecting -> Indigo
+            else         -> Color(0xFF3D4460)    // dim idle icon
         },
-        animationSpec = tween(700),
-        label = "glowColor"
+        animationSpec = tween(600),
+        label = "icon"
     )
 
-    // Spinning arc — only during connecting/disconnecting
-    val rotateAnim = rememberInfiniteTransition(label = "arc_rotate")
-    val arcRotation by rotateAnim.animateFloat(
-        initialValue = 0f,
-        targetValue = if (isConnecting) 360f else 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing)
-        ),
-        label = "arcRotation"
+    // Spinning arc — connecting state
+    val spin = rememberInfiniteTransition(label = "spin")
+    val arcAngle by spin.animateFloat(
+        initialValue = -90f,
+        targetValue  = if (isConnecting) 270f else -90f,
+        animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing)),
+        label = "arc"
     )
 
-    // Connected ring slow pulse — gentle "breathing"
-    val breatheAnim = rememberInfiniteTransition(label = "breathe")
-    val breatheAlpha by breatheAnim.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 1.0f,
+    // Breathing opacity — connected state
+    val breathe = rememberInfiniteTransition(label = "breathe")
+    val breatheAlpha by breathe.animateFloat(
+        initialValue = 0.6f,
+        targetValue  = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
+            tween(2200, easing = EaseInOutSine),
+            RepeatMode.Reverse
         ),
-        label = "breathe"
+        label = "glow"
     )
-    val ringAlpha = if (isConnected) breatheAlpha else 1.0f
 
     Box(
         modifier = modifier
             .size(size)
-            .scale(pressScale),
+            .scale(scale),
         contentAlignment = Alignment.Center
     ) {
-        // ── Outer glow halo (connected only) ─────────────────────────────────
-        if (isConnected || isError) {
-            Box(
-                modifier = Modifier
-                    .size(size * 1.18f)
-                    .clip(CircleShape)
-                    .background(glowColor)
-            )
-        }
+        // ── Outer ring drawn on Canvas ────────────────────────────────────────
+        Canvas(modifier = Modifier.size(size)) {
+            val stroke = 2.dp.toPx()
+            val r = size.toPx() / 2f - stroke / 2f
 
-        // ── Spinning connecting arc ───────────────────────────────────────────
-        if (isConnecting) {
-            Canvas(modifier = Modifier.size(size * 1.04f)) {
-                val r = (size.toPx() * 1.04f / 2f) - 3.dp.toPx()
-                // Dim full ring
-                drawCircle(
-                    color = AccentBlue.copy(alpha = 0.12f),
-                    radius = r,
-                    style = Stroke(width = 2.5.dp.toPx())
-                )
-                // Bright spinning sweep
-                drawArc(
-                    color = AccentBlue,
-                    startAngle = arcRotation,
-                    sweepAngle = 100f,
-                    useCenter = false,
-                    topLeft = androidx.compose.ui.geometry.Offset(center.x - r, center.y - r),
-                    size = androidx.compose.ui.geometry.Size(r * 2, r * 2),
-                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                )
-                // Trailing fade arc
-                drawArc(
-                    color = AccentBlue.copy(alpha = 0.3f),
-                    startAngle = arcRotation + 100f,
-                    sweepAngle = 60f,
-                    useCenter = false,
-                    topLeft = androidx.compose.ui.geometry.Offset(center.x - r, center.y - r),
-                    size = androidx.compose.ui.geometry.Size(r * 2, r * 2),
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-                )
+            when {
+                // Spinning arc — connecting
+                isConnecting -> {
+                    // Full dim ring
+                    drawCircle(
+                        color  = Indigo.copy(alpha = 0.15f),
+                        radius = r,
+                        style  = Stroke(width = stroke)
+                    )
+                    // Bright spinning sweep (270° head + 60° fade)
+                    drawArc(
+                        color      = Indigo,
+                        startAngle = arcAngle,
+                        sweepAngle = 220f,
+                        useCenter  = false,
+                        topLeft    = androidx.compose.ui.geometry.Offset(
+                            center.x - r, center.y - r
+                        ),
+                        size  = androidx.compose.ui.geometry.Size(r * 2, r * 2),
+                        style = Stroke(width = stroke, cap = StrokeCap.Round)
+                    )
+                }
+                // Solid ring — connected with breathing alpha
+                isConnected -> {
+                    drawCircle(
+                        color  = Emerald.copy(alpha = breatheAlpha),
+                        radius = r,
+                        style  = Stroke(width = 2.5.dp.toPx())
+                    )
+                }
+                // Error ring
+                isError -> {
+                    drawCircle(
+                        color  = Rose.copy(alpha = 0.7f),
+                        radius = r,
+                        style  = Stroke(width = stroke)
+                    )
+                }
+                // Idle hairline ring
+                else -> {
+                    drawCircle(
+                        color  = Color(0xFF1E2235),
+                        radius = r,
+                        style  = Stroke(width = stroke)
+                    )
+                }
             }
         }
 
-        // ── Static state ring ─────────────────────────────────────────────────
-        if (!isConnecting) {
-            Canvas(modifier = Modifier.size(size)) {
-                val r = (size.toPx() / 2f) - 5.dp.toPx()
-                drawCircle(
-                    color = stateColor.copy(alpha = if (isConnected) 0.5f * ringAlpha else 0.2f),
-                    radius = r,
-                    style = Stroke(width = if (isConnected) 2.dp.toPx() else 1.5.dp.toPx())
-                )
-            }
-        }
-
-        // ── Central tactile button plate ──────────────────────────────────────
+        // ── Button circle ─────────────────────────────────────────────────────
         Box(
             modifier = Modifier
-                .size(size * 0.76f)
-                .shadow(
-                    elevation = when {
-                        isConnected  -> 20.dp
-                        isConnecting -> 8.dp
-                        else         -> 4.dp
-                    },
-                    shape = CircleShape,
-                    ambientColor = stateColor.copy(alpha = 0.25f),
-                    spotColor   = stateColor.copy(alpha = 0.5f)
-                )
+                .size(size * 0.74f)
                 .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = when {
-                            isConnected -> listOf(
-                                Color(0xFF1A2E1E),
-                                MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            isConnecting -> listOf(
-                                Color(0xFF0F1E2C),
-                                MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            else -> listOf(
-                                MaterialTheme.colorScheme.surface,
-                                MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        }
-                    )
-                )
-                .border(
-                    width = if (isConnected) 1.5.dp else 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            stateColor.copy(alpha = if (isConnected) 0.6f else 0.2f),
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                        )
-                    ),
-                    shape = CircleShape
-                )
+                .background(Surface1)
                 .clickable(
                     interactionSource = interactionSource,
-                    indication = null
+                    indication        = null
                 ) { onClick() },
             contentAlignment = Alignment.Center
         ) {
+            // Subtle inner glow when connected
+            if (isConnected) {
+                Box(
+                    modifier = Modifier
+                        .size(size * 0.74f)
+                        .clip(CircleShape)
+                        .background(Emerald.copy(alpha = 0.05f * breatheAlpha))
+                )
+            }
+
             Icon(
-                imageVector = Icons.Default.PowerSettingsNew,
-                contentDescription = "VPN Power — tap to connect or disconnect",
-                modifier = Modifier.size(size * 0.30f),
-                tint = stateColor
+                imageVector         = Icons.Default.PowerSettingsNew,
+                contentDescription  = "Connect / Disconnect VPN",
+                tint                = iconColor,
+                modifier            = Modifier.size(size * 0.28f)
             )
         }
     }
