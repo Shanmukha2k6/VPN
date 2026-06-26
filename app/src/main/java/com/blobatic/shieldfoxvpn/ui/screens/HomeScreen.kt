@@ -226,13 +226,6 @@ fun HomeScreen(
                         letterSpacing = 6.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = "SECURE SESSION",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        letterSpacing = 2.sp
-                    )
                 }
             }
 
@@ -248,7 +241,7 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(10.dp))
 
             // ── Live Stats / Telemetry (Connected or connecting states) ────────
             VpnTelemetry(vpnState = uiState.vpnState)
