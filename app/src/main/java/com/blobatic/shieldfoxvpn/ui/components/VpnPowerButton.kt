@@ -31,10 +31,7 @@ import com.blobatic.shieldfoxvpn.ui.theme.*
 /**
  * ShieldFox — Premium Tactile Power Button.
  *
- * Designed to look like a premium control button with:
- * - Concentric sonar/radar pulse waves when connecting or active.
- * - Glassmorphic dial plate with dual neon gradient border.
- * - Dynamic color transitions: Sapphire (connecting) -> NeonEmerald (connected) -> Rose (failed) -> SpaceGrey (idle).
+ * Fully dynamic theme supporting Light and Dark modes.
  */
 @Composable
 fun VpnPowerButton(
@@ -51,6 +48,13 @@ fun VpnPowerButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentSecondary = MaterialTheme.colorScheme.secondary
+    val currentOutline = MaterialTheme.colorScheme.outline
+    val currentSurface = MaterialTheme.colorScheme.surface
+    val currentSurfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+
     // Press shrink animation
     val buttonScale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
@@ -64,10 +68,10 @@ fun VpnPowerButton(
     // State Colors
     val activeColor by animateColorAsState(
         targetValue = when {
-            isConnected  -> NeonEmerald
+            isConnected  -> currentSecondary
             isError      -> Rose
-            isConnecting -> Sapphire
-            else         -> GlassBorder
+            isConnecting -> currentPrimary
+            else         -> currentOutline
         },
         animationSpec = tween(600),
         label = "active_color"
@@ -75,9 +79,9 @@ fun VpnPowerButton(
 
     val activeGlowColor by animateColorAsState(
         targetValue = when {
-            isConnected  -> NeonEmerald.copy(alpha = 0.2f)
+            isConnected  -> currentSecondary.copy(alpha = 0.2f)
             isError      -> Rose.copy(alpha = 0.2f)
-            isConnecting -> Sapphire.copy(alpha = 0.2f)
+            isConnecting -> currentPrimary.copy(alpha = 0.2f)
             else         -> Color.Transparent
         },
         animationSpec = tween(600),
@@ -153,7 +157,6 @@ fun VpnPowerButton(
                 val baseRadius = (size.toPx() / 2f)
                 val activePulseColor = activeColor
 
-                // Helper to draw a expanding fading ring
                 val drawPulseRing = { progress: Float ->
                     if (progress > 0f) {
                         val radius = baseRadius * (1f + progress * 0.4f)
@@ -166,7 +169,6 @@ fun VpnPowerButton(
                     }
                 }
 
-                // Draw up to 3 concentric rings
                 drawPulseRing(pulse1Progress)
                 drawPulseRing(pulse2Progress)
                 drawPulseRing(pulse3Progress)
@@ -196,15 +198,13 @@ fun VpnPowerButton(
 
             when {
                 isConnecting -> {
-                    // Dim reference ring
                     drawCircle(
-                        color = Sapphire.copy(alpha = 0.15f),
+                        color = currentPrimary.copy(alpha = 0.15f),
                         radius = r,
                         style = Stroke(width = stroke)
                     )
-                    // High-speed spinning indicator
                     drawArc(
-                        color = Sapphire,
+                        color = currentPrimary,
                         startAngle = spinAngle,
                         sweepAngle = 100f,
                         useCenter = false,
@@ -214,14 +214,13 @@ fun VpnPowerButton(
                     )
                 }
                 isConnected -> {
-                    // Double Ring structure for a premium visual signature
                     drawCircle(
-                        color = NeonEmerald.copy(alpha = 0.2f),
+                        color = currentSecondary.copy(alpha = 0.2f),
                         radius = r + 4.dp.toPx(),
                         style = Stroke(width = 1.dp.toPx())
                     )
                     drawCircle(
-                        color = NeonEmerald,
+                        color = currentSecondary,
                         radius = r,
                         style = Stroke(width = stroke)
                     )
@@ -234,9 +233,8 @@ fun VpnPowerButton(
                     )
                 }
                 else -> {
-                    // Minimal metallic style ring for disconnected
                     drawCircle(
-                        color = GlassBorder,
+                        color = currentOutline,
                         radius = r,
                         style = Stroke(width = stroke)
                     )
@@ -251,14 +249,14 @@ fun VpnPowerButton(
                 .clip(CircleShape)
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(SurfaceElevated, SurfaceGlass)
+                        colors = listOf(currentSurfaceVariant, currentSurface)
                     )
                 )
                 .border(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            White.copy(alpha = 0.1f),
+                            Color.White.copy(alpha = 0.2f),
                             Color.Transparent,
                             activeColor.copy(alpha = 0.25f)
                         )
@@ -272,7 +270,6 @@ fun VpnPowerButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // Internal radial highlight
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -287,17 +284,15 @@ fun VpnPowerButton(
                     )
             )
 
-            // Inner glowing dot if connected
             if (isConnected) {
                 Box(
                     modifier = Modifier
                         .size(size * 0.68f)
                         .clip(CircleShape)
-                        .background(NeonEmerald.copy(alpha = 0.03f))
+                        .background(currentSecondary.copy(alpha = 0.03f))
                 )
             }
 
-            // High-fidelity power icon that glows/scales
             val iconScale by animateFloatAsState(
                 targetValue = if (isConnected) 1.08f else 1f,
                 animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -307,7 +302,7 @@ fun VpnPowerButton(
             Icon(
                 imageVector = Icons.Default.PowerSettingsNew,
                 contentDescription = "Connect / Disconnect VPN",
-                tint = if (isIdle) TextMuted else activeColor,
+                tint = if (isIdle) currentOnSurfaceVariant.copy(alpha = 0.5f) else activeColor,
                 modifier = Modifier
                     .size(size * 0.24f)
                     .scale(iconScale)

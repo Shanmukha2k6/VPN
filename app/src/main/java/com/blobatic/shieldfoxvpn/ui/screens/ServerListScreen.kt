@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,6 +42,12 @@ fun ServerListScreen(
         s.city.contains(query, ignoreCase = true)
     }
 
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val currentOutline = MaterialTheme.colorScheme.outline
+    val currentSurface = MaterialTheme.colorScheme.surface
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -53,7 +57,7 @@ fun ServerListScreen(
                         text = "VPN Locations",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
+                        color = currentOnBackground,
                         letterSpacing = (-0.5).sp
                     )
                 },
@@ -62,13 +66,13 @@ fun ServerListScreen(
                         onClick = onBack,
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .background(currentOutline.copy(alpha = 0.4f))
                             .size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary,
+                            tint = currentOnBackground,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -78,13 +82,13 @@ fun ServerListScreen(
                         onClick = { viewModel.loadServers() },
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .background(currentOutline.copy(alpha = 0.4f))
                             .size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh list",
-                            tint = Sapphire,
+                            tint = currentPrimary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -109,11 +113,11 @@ fun ServerListScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .border(0.5.dp, GlassBorder, RoundedCornerShape(14.dp)),
+                    .border(0.5.dp, currentOutline, RoundedCornerShape(14.dp)),
                 placeholder = {
                     Text(
                         text = "Search gateways...",
-                        color = TextMuted,
+                        color = currentOnSurfaceVariant.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
@@ -121,7 +125,7 @@ fun ServerListScreen(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
-                        tint = TextSecondary,
+                        tint = currentOnSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
                 },
@@ -131,20 +135,20 @@ fun ServerListScreen(
                             Icon(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = "Clear search",
-                                tint = TextPrimary,
+                                tint = currentOnBackground,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 },
                 colors = TextFieldDefaults.colors(
-                    focusedTextColor           = TextPrimary,
-                    unfocusedTextColor         = TextPrimary,
-                    focusedContainerColor      = SurfaceGlass,
-                    unfocusedContainerColor    = SurfaceGlass,
+                    focusedTextColor           = currentOnBackground,
+                    unfocusedTextColor         = currentOnBackground,
+                    focusedContainerColor      = currentSurface,
+                    unfocusedContainerColor    = currentSurface,
                     focusedIndicatorColor      = Color.Transparent,
                     unfocusedIndicatorColor    = Color.Transparent,
-                    cursorColor                = Sapphire
+                    cursorColor                = currentPrimary
                 ),
                 shape = RoundedCornerShape(14.dp),
                 singleLine = true
@@ -156,7 +160,7 @@ fun ServerListScreen(
                 Box(Modifier.fillMaxSize(), Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
-                            color       = Sapphire,
+                            color       = currentPrimary,
                             strokeWidth = 2.dp,
                             modifier    = Modifier.size(32.dp)
                         )
@@ -164,7 +168,7 @@ fun ServerListScreen(
                         Text(
                             "Analyzing network routing...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = currentOnSurfaceVariant
                         )
                     }
                 }
@@ -187,7 +191,7 @@ fun ServerListScreen(
                             Text(
                                 text = "AVAILABLE GATEWAYS",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextMuted,
+                                color = currentOnSurfaceVariant.copy(alpha = 0.6f),
                                 letterSpacing = 2.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(
@@ -215,15 +219,20 @@ fun ServerListScreen(
 
 @Composable
 private fun AutoCard(isSelected: Boolean, onClick: () -> Unit) {
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentOutline = MaterialTheme.colorScheme.outline
+    val currentSurface = MaterialTheme.colorScheme.surface
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (isSelected) Sapphire.copy(alpha = 0.05f) else SurfaceGlass)
+            .background(if (isSelected) currentPrimary.copy(alpha = 0.08f) else currentSurface)
             .border(
                 width = 0.5.dp,
-                color = if (isSelected) Sapphire else GlassBorder,
+                color = if (isSelected) currentPrimary else currentOutline,
                 shape = RoundedCornerShape(14.dp)
             )
             .clickable(onClick = onClick)
@@ -236,13 +245,13 @@ private fun AutoCard(isSelected: Boolean, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) Sapphire.copy(alpha = 0.15f) else GlassBorder),
+                    .background(if (isSelected) currentPrimary.copy(alpha = 0.15f) else currentOutline),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Bolt,
                     contentDescription = null,
-                    tint     = if (isSelected) Sapphire else TextSecondary,
+                    tint     = if (isSelected) currentPrimary else currentOnSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -251,20 +260,20 @@ private fun AutoCard(isSelected: Boolean, onClick: () -> Unit) {
                 Text(
                     text = "Smart Connection (Auto)",
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (isSelected) Sapphire else TextPrimary,
+                    color = if (isSelected) currentPrimary else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Route dynamically through the lowest latency nodes",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = currentOnSurfaceVariant
                 )
             }
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = Sapphire,
+                    tint = currentPrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -276,8 +285,15 @@ private fun AutoCard(isSelected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Unit) {
+    val currentSecondary = MaterialTheme.colorScheme.secondary
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentOutline = MaterialTheme.colorScheme.outline
+    val currentSurface = MaterialTheme.colorScheme.surface
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+
     val highlightColor by animateColorAsState(
-        targetValue = if (isSelected) NeonEmerald else TextPrimary,
+        targetValue = if (isSelected) currentSecondary else currentOnBackground,
         animationSpec = tween(250),
         label = "highlight"
     )
@@ -287,10 +303,10 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (isSelected) NeonEmerald.copy(alpha = 0.05f) else SurfaceGlass)
+            .background(if (isSelected) currentSecondary.copy(alpha = 0.08f) else currentSurface)
             .border(
                 width = 0.5.dp,
-                color = if (isSelected) NeonEmerald else GlassBorder,
+                color = if (isSelected) currentSecondary else currentOutline,
                 shape = RoundedCornerShape(14.dp)
             )
             .clickable(onClick = onClick)
@@ -317,7 +333,7 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
                     Text(
                         text = server.city,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = currentOnSurfaceVariant
                     )
                 }
             }
@@ -333,7 +349,7 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
                     text = "${ping}ms",
                     style = MaterialTheme.typography.labelSmall,
                     color = when {
-                        ping < 100 -> NeonEmerald
+                        ping < 100 -> currentSecondary
                         ping < 200 -> Amber
                         else       -> Rose
                     },
@@ -348,14 +364,14 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = NeonEmerald,
+                    tint = currentSecondary,
                     modifier = Modifier.size(20.dp)
                 )
             } else {
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint     = TextMuted,
+                    tint     = currentOnSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -367,9 +383,12 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
 
 @Composable
 private fun SignalBars(ping: Int) {
+    val currentSecondary = MaterialTheme.colorScheme.secondary
+    val currentOutline = MaterialTheme.colorScheme.outline
+
     val (bars, color) = when {
-        ping < 100 -> 4 to NeonEmerald
-        ping < 200 -> 3 to NeonEmerald
+        ping < 100 -> 4 to currentSecondary
+        ping < 200 -> 3 to currentSecondary
         ping < 300 -> 2 to Amber
         else       -> 1 to Rose
     }
@@ -384,7 +403,7 @@ private fun SignalBars(ping: Int) {
                     .clip(RoundedCornerShape(1.dp))
                     .background(
                         if (i <= bars) color
-                        else GlassBorder
+                        else currentOutline
                     )
             )
         }

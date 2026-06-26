@@ -21,7 +21,7 @@ object ThemeManager {
 }
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
-// Philosophy: Electric cyber-security vibes. Dark sapphire and neon emerald.
+// Philosophy: Electric cyber-security vibes. Sapphire primary and NeonEmerald secure.
 
 // Sapphire Brand Primary
 val Sapphire      = Color(0xFF3B82F6)   // vibrant sapphire blue
@@ -66,45 +66,46 @@ private val DarkScheme = darkColorScheme(
     onTertiary           = Color(0xFFFFFFFF),
 
     background           = SpaceBlack,
-    onBackground         = TextPrimary,
+    onBackground         = TextPrimary, // Slate 100
 
-    surface              = SurfaceGlass,
+    surface              = SurfaceGlass, // 0xFF0F1322
     onSurface            = TextPrimary,
-    surfaceVariant       = SurfaceElevated,
-    onSurfaceVariant     = TextSecondary,
+    surfaceVariant       = SurfaceElevated, // 0xFF181C30
+    onSurfaceVariant     = TextSecondary, // Slate 400
 
     error                = Rose,
     onError              = Color(0xFFFFFFFF),
     errorContainer       = Color(0xFF7F1D1D),
     onErrorContainer     = Color(0xFFFCA5A5),
 
-    outline              = GlassBorder,
+    outline              = GlassBorder, // 0xFF1E2640
     outlineVariant       = Color(0xFF1E293B),
 )
 
+// Colorful, consistent Light theme matching the Navy-Sapphire palette structure
 private val LightScheme = lightColorScheme(
-    primary              = SapphireDim,
+    primary              = Sapphire,
     onPrimary            = Color(0xFFFFFFFF),
-    primaryContainer     = Color(0xFFEFF6FF),
-    onPrimaryContainer   = Color(0xFF1E40AF),
+    primaryContainer     = Color(0xFFDBEAFE), // light sapphire container
+    onPrimaryContainer   = Sapphire,
 
-    secondary            = NeonEmeraldDim,
+    secondary            = NeonEmerald,
     onSecondary          = Color(0xFFFFFFFF),
     secondaryContainer   = Color(0xFFD1FAE5),
-    onSecondaryContainer = Color(0xFF065F46),
+    onSecondaryContainer = NeonEmerald,
 
-    background           = Color(0xFFF8FAFC), // slate 50
-    onBackground         = Color(0xFF0F172A), // slate 900
+    background           = Color(0xFFEEF2FF), // beautiful rich cool-blue/sapphire tinted background
+    onBackground         = Color(0xFF0F172A), // slate 900 / dark navy for high readability
 
-    surface              = Color(0xFFFFFFFF),
+    surface              = Color(0xFFFFFFFF), // crisp white cards to stand out on the blue background
     onSurface            = Color(0xFF0F172A),
-    surfaceVariant       = Color(0xFFF1F5F9), // slate 100
-    onSurfaceVariant     = Color(0xFF475569), // slate 600
+    surfaceVariant       = Color(0xFFE2E8F0), // slate 200 for elevated surfaces
+    onSurfaceVariant     = Color(0xFF475569), // slate 600 subtext
 
     error                = Rose,
     onError              = Color(0xFFFFFFFF),
-    outline              = Color(0xFFE2E8F0),
-    outlineVariant       = Color(0xFFCBD5E1),
+    outline              = Color(0xFFC7D2FE), // indigo-200 outline for premium consistent borders
+    outlineVariant       = Color(0xFFE0E7FF), // slate-100/light-blue
 )
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
@@ -120,7 +121,7 @@ fun ShieldFoxTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            val bg = if (darkTheme) SpaceBlack.toArgb() else Color(0xFFF8FAFC).toArgb()
+            val bg = if (darkTheme) SpaceBlack.toArgb() else Color(0xFFEEF2FF).toArgb()
             window.statusBarColor = bg
             window.navigationBarColor = bg
             WindowCompat.getInsetsController(window, view).apply {

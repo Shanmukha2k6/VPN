@@ -16,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +32,13 @@ fun SettingsScreen(onBack: () -> Unit) {
     var dns        by remember { mutableStateOf(true) }
     var notifs     by remember { mutableStateOf(true) }
 
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentSecondary = MaterialTheme.colorScheme.secondary
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val currentOutline = MaterialTheme.colorScheme.outline
+    val currentSurface = MaterialTheme.colorScheme.surface
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -42,7 +48,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         text = "Settings",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
+                        color = currentOnBackground,
                         letterSpacing = (-0.5).sp
                     )
                 },
@@ -51,13 +57,13 @@ fun SettingsScreen(onBack: () -> Unit) {
                         onClick = onBack,
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .background(currentOutline.copy(alpha = 0.4f))
                             .size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary,
+                            tint = currentOnBackground,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -82,15 +88,15 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp)),
+                    .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceGlass)
+                colors = CardDefaults.cardColors(containerColor = currentSurface)
             ) {
                 Column {
                     ToggleRow(
                         icon = Icons.Default.Wifi,
-                        iconBg = Sapphire.copy(alpha = 0.12f),
-                        iconTint = Sapphire,
+                        iconBg = currentPrimary.copy(alpha = 0.12f),
+                        iconTint = currentPrimary,
                         title = "Auto Connect",
                         sub = "Initialize VPN on untrusted Wi-Fi",
                         checked = autoConn,
@@ -109,8 +115,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                     Divider()
                     ToggleRow(
                         icon = Icons.Default.Security,
-                        iconBg = NeonEmerald.copy(alpha = 0.12f),
-                        iconTint = NeonEmerald,
+                        iconBg = currentSecondary.copy(alpha = 0.12f),
+                        iconTint = currentSecondary,
                         title = "DNS Leak Protection",
                         sub = "Force private DNS resolver query routing",
                         checked = dns,
@@ -127,9 +133,9 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp)),
+                    .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceGlass)
+                colors = CardDefaults.cardColors(containerColor = currentSurface)
             ) {
                 Column {
                     ToggleRow(
@@ -144,8 +150,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                     Divider()
                     ToggleRow(
                         icon = Icons.Default.Notifications,
-                        iconBg = Sapphire.copy(alpha = 0.12f),
-                        iconTint = Sapphire,
+                        iconBg = currentPrimary.copy(alpha = 0.12f),
+                        iconTint = currentPrimary,
                         title = "Notifications",
                         sub = "Push alert on connection state changes",
                         checked = notifs,
@@ -162,15 +168,15 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp)),
+                    .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceGlass)
+                colors = CardDefaults.cardColors(containerColor = currentSurface)
             ) {
                 Column {
                     NavRow(
                         icon = Icons.Default.Info,
-                        iconBg = GlassBorder,
-                        iconTint = TextPrimary,
+                        iconBg = currentOutline,
+                        iconTint = currentOnBackground,
                         title = "System Information",
                         sub = "ShieldFox Core Client v1.0.0",
                         onClick = {}
@@ -178,8 +184,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                     Divider()
                     NavRow(
                         icon = Icons.Default.PrivacyTip,
-                        iconBg = GlassBorder,
-                        iconTint = TextPrimary,
+                        iconBg = currentOutline,
+                        iconTint = currentOnBackground,
                         title = "Privacy Policy",
                         sub = "No-log routing commitment details",
                         onClick = {}
@@ -187,8 +193,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                     Divider()
                     NavRow(
                         icon = Icons.Default.Gavel,
-                        iconBg = GlassBorder,
-                        iconTint = TextPrimary,
+                        iconBg = currentOutline,
+                        iconTint = currentOnBackground,
                         title = "Terms of Service",
                         sub = "Usage boundaries and fair routing rules",
                         onClick = {}
@@ -202,7 +208,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             Text(
                 text = "SHIELDFOX • BY BLOBATIC",
                 style = MaterialTheme.typography.labelSmall,
-                color = TextMuted,
+                color = currentOnSurfaceVariant.copy(alpha = 0.6f),
                 letterSpacing = 1.5.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -220,7 +226,7 @@ private fun SettingsGroupHeader(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
-        color = TextMuted,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         letterSpacing = 1.5.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(start = 28.dp, bottom = 4.dp)
@@ -232,7 +238,7 @@ private fun SettingsGroupHeader(text: String) {
 @Composable
 private fun Divider() {
     HorizontalDivider(
-        color = GlassBorder.copy(alpha = 0.6f),
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
         thickness = 0.5.dp,
         modifier = Modifier.padding(start = 72.dp, end = 16.dp)
     )
@@ -250,6 +256,11 @@ private fun ToggleRow(
     checked: Boolean,
     onChange: (Boolean) -> Unit
 ) {
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentOutline = MaterialTheme.colorScheme.outline
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -278,13 +289,13 @@ private fun ToggleRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextPrimary,
+                color = currentOnBackground,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = sub,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = currentOnSurfaceVariant
             )
         }
         
@@ -293,9 +304,9 @@ private fun ToggleRow(
             onCheckedChange = onChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = Sapphire,
-                uncheckedThumbColor = TextMuted,
-                uncheckedTrackColor = GlassBorder,
+                checkedTrackColor = currentPrimary,
+                uncheckedThumbColor = currentOnSurfaceVariant.copy(alpha = 0.6f),
+                uncheckedTrackColor = currentOutline,
                 uncheckedBorderColor = Color.Transparent,
                 checkedBorderColor = Color.Transparent
             )
@@ -314,6 +325,9 @@ private fun NavRow(
     sub: String,
     onClick: () -> Unit
 ) {
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -347,20 +361,20 @@ private fun NavRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextPrimary,
+                color = currentOnBackground,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = sub,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = currentOnSurfaceVariant
             )
         }
         
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = TextMuted,
+            tint = currentOnSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.size(18.dp)
         )
     }

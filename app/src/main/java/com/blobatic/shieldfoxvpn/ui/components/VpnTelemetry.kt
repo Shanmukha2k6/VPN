@@ -10,13 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -35,6 +33,11 @@ fun VpnTelemetry(
     modifier: Modifier = Modifier
 ) {
     val isConnected = vpnState is VpnState.Connected
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentSecondary = MaterialTheme.colorScheme.secondary
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+    val currentOutline = MaterialTheme.colorScheme.outline
 
     // Simulate network speed data when connected
     var downloadSpeed by remember { mutableStateOf("0.0 Mbps") }
@@ -43,8 +46,6 @@ fun VpnTelemetry(
     LaunchedEffect(vpnState) {
         if (isConnected) {
             val connectedState = vpnState as VpnState.Connected
-            // If we have actual bytes sent/received, we could compute real speed,
-            // otherwise simulate realistic, dynamic VPN traffic fluctuations
             var prevBytesIn = connectedState.bytesIn
             var prevBytesOut = connectedState.bytesOut
 
@@ -62,11 +63,9 @@ fun VpnTelemetry(
                     prevBytesOut = currentBytesOut
 
                     if (diffIn > 0 || diffOut > 0) {
-                        // Display actual transfer speed
                         downloadSpeed = formatSpeed(diffIn)
                         uploadSpeed = formatSpeed(diffOut)
                     } else {
-                        // Simulation of natural background traffic
                         val dl = (15.0 + Random.nextDouble() * 25.0).toFloat()
                         val ul = (1.5 + Random.nextDouble() * 6.5).toFloat()
                         downloadSpeed = "%.1f Mbps".format(dl)
@@ -94,8 +93,8 @@ fun VpnTelemetry(
             SpeedCard(
                 title = "DOWNLOAD",
                 speed = downloadSpeed,
-                iconColor = NeonEmerald,
-                waveColor = NeonEmerald.copy(alpha = 0.15f),
+                iconColor = currentSecondary,
+                waveColor = currentSecondary.copy(alpha = 0.15f),
                 isDownloading = true,
                 isActive = isConnected,
                 modifier = Modifier.weight(1f)
@@ -104,8 +103,8 @@ fun VpnTelemetry(
             SpeedCard(
                 title = "UPLOAD",
                 speed = uploadSpeed,
-                iconColor = Sapphire,
-                waveColor = Sapphire.copy(alpha = 0.15f),
+                iconColor = currentPrimary,
+                waveColor = currentPrimary.copy(alpha = 0.15f),
                 isDownloading = false,
                 isActive = isConnected,
                 modifier = Modifier.weight(1f)
@@ -129,14 +128,14 @@ fun VpnTelemetry(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(SurfaceGlass)
-                    .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp))
                     .padding(16.dp)
             ) {
                 Text(
                     text = "CONNECTION TELEMETRY",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted,
+                    color = currentOnSurfaceVariant.copy(alpha = 0.6f),
                     letterSpacing = 1.5.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -155,7 +154,7 @@ fun VpnTelemetry(
                     Text(
                         text = "SERVER LOAD",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = currentOnSurfaceVariant,
                         modifier = Modifier.weight(1f)
                     )
                     Row(
@@ -165,7 +164,7 @@ fun VpnTelemetry(
                         Text(
                             text = "$loadValue%",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimary,
+                            color = currentOnBackground,
                             fontWeight = FontWeight.SemiBold
                         )
                         Box(
@@ -173,7 +172,7 @@ fun VpnTelemetry(
                                 .width(80.dp)
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp))
-                                .background(GlassBorder)
+                                .background(currentOutline)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -182,7 +181,7 @@ fun VpnTelemetry(
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(
                                         Brush.horizontalGradient(
-                                            listOf(Sapphire, NeonEmerald)
+                                            listOf(currentPrimary, currentSecondary)
                                         )
                                     )
                             )
@@ -193,7 +192,7 @@ fun VpnTelemetry(
                 TelemetryRow(
                     label = "PING / LATENCY",
                     value = "$serverPing ms",
-                    valueColor = if (serverPing < 150) NeonEmerald else Amber,
+                    valueColor = if (serverPing < 150) currentSecondary else Amber,
                     showDot = true
                 )
 
@@ -231,8 +230,8 @@ private fun SpeedCard(
         modifier = modifier
             .height(100.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(SurfaceGlass)
-            .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(0.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
     ) {
         // Animated waveform graph in background
         if (isActive) {
@@ -246,7 +245,6 @@ private fun SpeedCard(
                 val height = size.height
                 path.moveTo(0f, height)
                 
-                // Draw a beautiful sine wave
                 for (x in 0..width.toInt() step 4) {
                     val angle = (x * 0.04f) + phase
                     val amplitude = if (isDownloading) 12.dp.toPx() else 8.dp.toPx()
@@ -298,7 +296,7 @@ private fun SpeedCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
@@ -324,7 +322,7 @@ private fun SpeedCard(
                 style = MaterialTheme.typography.titleLarge,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
@@ -335,9 +333,13 @@ private fun SpeedCard(
 private fun TelemetryRow(
     label: String,
     value: String,
-    valueColor: Color = TextPrimary,
+    valueColor: Color = Color.Unspecified, // fallback to onBackground inside the text
     showDot: Boolean = false
 ) {
+    val currentOnBackground = MaterialTheme.colorScheme.onBackground
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val resolvedValueColor = if (valueColor == Color.Unspecified) currentOnBackground else valueColor
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -347,7 +349,7 @@ private fun TelemetryRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary,
+            color = currentOnSurfaceVariant,
             modifier = Modifier.weight(1f)
         )
         Row(
@@ -359,13 +361,13 @@ private fun TelemetryRow(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(RoundedCornerShape(3.dp))
-                        .background(valueColor)
+                        .background(resolvedValueColor)
                 )
             }
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodySmall,
-                color = valueColor,
+                color = resolvedValueColor,
                 fontWeight = FontWeight.SemiBold
             )
         }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -35,14 +34,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.blobatic.shieldfoxvpn.data.model.VpnServer
 import com.blobatic.shieldfoxvpn.viewmodel.VpnViewModel
-import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
 import com.blobatic.shieldfoxvpn.data.model.VpnState
 import com.blobatic.shieldfoxvpn.ui.components.AdmobBanner
 import com.blobatic.shieldfoxvpn.ui.components.VpnPowerButton
 import com.blobatic.shieldfoxvpn.ui.components.VpnTelemetry
 import com.blobatic.shieldfoxvpn.ui.theme.*
-import kotlin.math.cos
-import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,8 +49,6 @@ fun HomeScreen(
     viewModel: VpnViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showProtocolSheet by remember { mutableStateOf(false) }
-    var killSwitchEnabled by remember { mutableStateOf(false) }
 
     // Cyber-Scanner Rotator
     val scannerTransition = rememberInfiniteTransition(label = "scanner_rotation")
@@ -80,7 +74,10 @@ fun HomeScreen(
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(Sapphire, NeonEmerald)
+                                        listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.secondary
+                                        )
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -96,7 +93,7 @@ fun HomeScreen(
                             text = "ShieldFox",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             letterSpacing = (-0.5).sp
                         )
                     }
@@ -106,13 +103,13 @@ fun HomeScreen(
                         onClick = onNavigateToSettings,
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(GlassBorder.copy(alpha = 0.4f))
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                             .size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
-                            tint = TextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -147,7 +144,7 @@ fun HomeScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Location Selector Card ─────────────────────────────────────────
+            // ── Location Selector Card (Above connect button/switch) ─────────
             LocationSelector(
                 server = uiState.selectedServer,
                 onClick = onNavigateToServers
@@ -157,14 +154,17 @@ fun HomeScreen(
 
             // ── Radar Canvas & Power Button ──────────────────────────────────
             Box(
-                modifier = Modifier
-                    .size(280.dp),
+                modifier = Modifier.size(280.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Radar / Satellite cyber-grid scanner animation in background
+                val currentPrimary = MaterialTheme.colorScheme.primary
+                val currentSecondary = MaterialTheme.colorScheme.secondary
+                val isVpnConnected = uiState.vpnState is VpnState.Connected
+
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val center = Offset(size.width / 2f, size.height / 2f)
-                    val scannerColor = Sapphire.copy(alpha = 0.05f)
+                    val scannerColor = currentPrimary.copy(alpha = 0.05f)
 
                     // Concentric coordinate rings
                     drawCircle(
@@ -221,7 +221,7 @@ fun HomeScreen(
                             path = path,
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    if (uiState.vpnState is VpnState.Connected) NeonEmerald.copy(alpha = 0.1f) else Sapphire.copy(alpha = 0.1f),
+                                    if (isVpnConnected) currentSecondary.copy(alpha = 0.1f) else currentPrimary.copy(alpha = 0.1f),
                                     Color.Transparent
                                 ),
                                 center = center,
@@ -251,7 +251,7 @@ fun HomeScreen(
                     Text(
                         text = viewModel.formatTimer(uiState.connectedSeconds),
                         style = MaterialTheme.typography.headlineLarge,
-                        color = NeonEmerald,
+                        color = MaterialTheme.colorScheme.secondary,
                         letterSpacing = 6.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -259,7 +259,7 @@ fun HomeScreen(
                     Text(
                         text = "SECURE SESSION",
                         style = MaterialTheme.typography.labelMedium,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 2.sp
                     )
                 }
@@ -273,7 +273,7 @@ fun HomeScreen(
                 Text(
                     text = "Tap to initialize tunnel",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
 
@@ -281,16 +281,6 @@ fun HomeScreen(
 
             // ── Live Stats / Telemetry (Connected or connecting states) ────────
             VpnTelemetry(vpnState = uiState.vpnState)
-
-            Spacer(Modifier.height(24.dp))
-
-            // ── Quick Controls Chips ───────────────────────────────────────────
-            QuickControls(
-                currentProtocol = uiState.selectedProtocol,
-                killSwitchEnabled = killSwitchEnabled,
-                onProtocolClick = { showProtocolSheet = true },
-                onKillSwitchToggle = { killSwitchEnabled = !killSwitchEnabled }
-            )
 
             // ── Error Banner ──────────────────────────────────────────────────
             val errorMsg = uiState.errorMessage
@@ -335,100 +325,22 @@ fun HomeScreen(
             Spacer(Modifier.height(36.dp))
         }
     }
-
-    // ─── Protocol Picker Sheet ────────────────────────────────────────────────
-    if (showProtocolSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showProtocolSheet = false },
-            containerColor = SurfaceGlass,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-                    .padding(bottom = 36.dp)
-            ) {
-                Text(
-                    text = "Select Protocol",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Protocols dictate how data is packetized and routed.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-                Spacer(Modifier.height(20.dp))
-
-                VpnProtocol.values().forEach { protocol ->
-                    val isSelected = uiState.selectedProtocol == protocol
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSelected) Sapphire.copy(alpha = 0.08f) else Color.Transparent)
-                            .clickable {
-                                viewModel.selectProtocol(protocol)
-                                showProtocolSheet = false
-                            }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(if (isSelected) Sapphire else GlassBorder),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (isSelected) {
-                                Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = protocol.displayName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (isSelected) Sapphire else TextPrimary,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                            val desc = when (protocol) {
-                                VpnProtocol.AUTO -> "Automatically pick fastest protocol"
-                                VpnProtocol.WIREGUARD -> "Next-gen, ultra-fast and lightweight"
-                                VpnProtocol.OPENVPN_UDP -> "Highly secure, default open tunnel"
-                                VpnProtocol.OPENVPN_TCP -> "Robust fallback connection for strict firewalls"
-                                VpnProtocol.IKEV2 -> "Excellent mobile stability, fast handshakes"
-                                VpnProtocol.HTTP_PROXY -> "Route browser and app proxy ports only"
-                                VpnProtocol.SOCKS5_PROXY -> "Low latency socks port routing"
-                            }
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextMuted,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 // ─── Status Label ─────────────────────────────────────────────────────────────
 
 @Composable
 private fun StatusLabel(state: VpnState) {
+    val currentSecondary = MaterialTheme.colorScheme.secondary
+    val currentPrimary = MaterialTheme.colorScheme.primary
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+
     val (text, subtitle, color) = when (state) {
-        is VpnState.Connected     -> Triple("SECURED", "ShieldFox protection active", NeonEmerald)
-        is VpnState.Connecting    -> Triple("CONNECTING", "Routing traffic through tunnel", Sapphire)
+        is VpnState.Connected     -> Triple("SECURED", "ShieldFox protection active", currentSecondary)
+        is VpnState.Connecting    -> Triple("CONNECTING", "Routing traffic through tunnel", currentPrimary)
         is VpnState.Disconnecting -> Triple("DISCONNECTING", "Tearing down tunnel interface", Amber)
         is VpnState.Error         -> Triple("UNSECURED", "Connection failed", Rose)
-        else                      -> Triple("NOT SECURED", "Traffic is unprotected", TextMuted)
+        else                      -> Triple("NOT SECURED", "Traffic is unprotected", currentOnSurfaceVariant.copy(alpha = 0.6f))
     }
 
     val shouldPulse = state is VpnState.Connecting || state is VpnState.Disconnecting
@@ -471,7 +383,7 @@ private fun StatusLabel(state: VpnState) {
         Text(
             text          = subtitle,
             style         = MaterialTheme.typography.bodySmall,
-            color         = TextSecondary,
+            color         = currentOnSurfaceVariant,
             textAlign     = TextAlign.Center
         )
     }
@@ -481,13 +393,16 @@ private fun StatusLabel(state: VpnState) {
 
 @Composable
 private fun LocationSelector(server: VpnServer?, onClick: () -> Unit) {
+    val currentOnSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val currentOutline = MaterialTheme.colorScheme.outline
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(SurfaceGlass)
-            .border(0.5.dp, GlassBorder, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(0.5.dp, currentOutline, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
@@ -506,12 +421,12 @@ private fun LocationSelector(server: VpnServer?, onClick: () -> Unit) {
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(GlassBorder),
+                        .background(currentOutline),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Public, null,
-                        tint     = TextSecondary,
+                        tint     = currentOnSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -523,108 +438,27 @@ private fun LocationSelector(server: VpnServer?, onClick: () -> Unit) {
                 Text(
                     text = "TARGET GATEWAY",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted,
+                    color = currentOnSurfaceVariant.copy(alpha = 0.6f),
                     letterSpacing = 1.sp
                 )
                 Text(
                     text  = server?.countryName ?: "Smart Connection",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text  = server?.city?.takeIf { it.isNotBlank() } ?: "Fastest Server",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = currentOnSurfaceVariant
                 )
             }
 
             Icon(
                 Icons.Default.ChevronRight, null,
-                tint     = TextMuted,
+                tint     = currentOnSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.size(20.dp)
             )
-        }
-    }
-}
-
-// ─── Quick Controls Chips ─────────────────────────────────────────────────────
-
-@Composable
-private fun QuickControls(
-    currentProtocol: VpnProtocol,
-    killSwitchEnabled: Boolean,
-    onProtocolClick: () -> Unit,
-    onKillSwitchToggle: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // Protocol Chip
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(SurfaceGlass)
-                .border(0.5.dp, GlassBorder, RoundedCornerShape(12.dp))
-                .clickable(onClick = onProtocolClick)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    Icons.Default.Link, null,
-                    tint = Sapphire,
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = currentProtocol.displayName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
-            }
-        }
-
-        // Kill Switch Chip
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (killSwitchEnabled) Rose.copy(alpha = 0.08f) else SurfaceGlass)
-                .border(
-                    width = 0.5.dp,
-                    color = if (killSwitchEnabled) Rose.copy(alpha = 0.3f) else GlassBorder,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable(onClick = onKillSwitchToggle)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    Icons.Default.Block, null,
-                    tint = if (killSwitchEnabled) Rose else TextMuted,
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = if (killSwitchEnabled) "Kill Switch: On" else "Kill Switch: Off",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (killSwitchEnabled) Rose else TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
-            }
         }
     }
 }
