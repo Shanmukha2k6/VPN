@@ -139,18 +139,18 @@ fun HomeScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // ── Status Info ──────────────────────────────────────────────────
-            StatusLabel(uiState.vpnState)
-
-            Spacer(Modifier.height(20.dp))
-
-            // ── Location Selector Card (Above connect button/switch) ─────────
+            // ── Location Selector Card ─────────────────────────────────────────
             LocationSelector(
                 server = uiState.selectedServer,
                 onClick = onNavigateToServers
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
+
+            // ── Status Info (Under location, above connect button/switch) ──────
+            StatusLabel(uiState.vpnState)
+
+            Spacer(Modifier.height(16.dp))
 
             // ── Radar Canvas & Power Button ──────────────────────────────────
             Box(
