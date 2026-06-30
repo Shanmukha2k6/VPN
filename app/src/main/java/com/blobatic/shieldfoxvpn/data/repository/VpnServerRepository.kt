@@ -15,8 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 // ─── JSON model for each server entry ─────────────────────────────────────────
-// This matches exactly what you type in Firebase Remote Config → server_list
-
+// This matches the exact structure of the original VpnServer class.
 data class RemoteServer(
     @SerializedName("id")          val id: String,
     @SerializedName("countryName") val countryName: String,
@@ -26,7 +25,16 @@ data class RemoteServer(
     @SerializedName("ipAddress")   val ipAddress: String,
     @SerializedName("protocol")    val protocol: String,
     @SerializedName("port")        val port: Int,
-    @SerializedName("isPremium")   val isPremium: Boolean = false
+    @SerializedName("isPremium")   val isPremium: Boolean = false,
+    @SerializedName("ovpnConfig")   val ovpnConfig: String = "",
+    @SerializedName("ikev2Host")    val ikev2Host: String = "",
+    @SerializedName("ikev2User")    val ikev2User: String = "",
+    @SerializedName("ikev2Pass")    val ikev2Pass: String = "",
+    @SerializedName("wgEndpoint")   val wgEndpoint: String = "",
+    @SerializedName("wgPrivateKey") val wgPrivateKey: String = "",
+    @SerializedName("wgPublicKey")  val wgPublicKey: String = "",
+    @SerializedName("wgAddress")    val wgAddress: String = "",
+    @SerializedName("wgDns")        val wgDns: String = "1.1.1.1"
 )
 
 /**
@@ -35,15 +43,7 @@ data class RemoteServer(
  * ALL configuration comes from Firebase Remote Config:
  *   - proxy_username  → your proxy username
  *   - proxy_password  → your proxy password
- *   - server_list     → JSON array of servers (IPs, ports, countries)
- *
- * Nothing sensitive is in the APK. To update anything:
- *   → Firebase Console → Remote Config → edit → Publish
- *   → Users get the update within 1 hour. No app update needed.
- *
- * Fallback chain if Firebase is unreachable:
- *   1. Firebase SDK's own local cache (automatic, survives app restarts)
- *   2. EMERGENCY_FALLBACK below (same structure, no credentials)
+ *   - server_list     → JSON array of servers matching the original app configuration
  */
 @Singleton
 class VpnServerRepository @Inject constructor(
@@ -55,39 +55,174 @@ class VpnServerRepository @Inject constructor(
     companion object {
         private const val TAG = "VpnServerRepository"
 
-        // Emergency fallback — used ONLY if Firebase has never been reached
-        // (brand new install, never had internet). No credentials here.
+        // Emergency fallback — matches the exact original 15 servers originally in the app.
+        // No credentials here — SOCKS5 and HTTP credentials are dynamically injected from Remote Config.
         private val EMERGENCY_FALLBACK = listOf(
-            RemoteServer("us_1", "United States", "US", "New York",
-                "151.247.124.10", "151.247.124.10", "SOCKS5_PROXY", 50101),
-            RemoteServer("gb_1", "United Kingdom", "GB", "London",
-                "151.247.124.11", "151.247.124.11", "SOCKS5_PROXY", 50101),
-            RemoteServer("de_1", "Germany", "DE", "Frankfurt",
-                "151.247.124.12", "151.247.124.12", "HTTP_PROXY", 50100),
-            RemoteServer("fr_1", "France", "FR", "Paris",
-                "151.247.124.13", "151.247.124.13", "SOCKS5_PROXY", 50101),
-            RemoteServer("nl_1", "Netherlands", "NL", "Amsterdam",
-                "151.247.124.14", "151.247.124.14", "HTTP_PROXY", 50100),
-            RemoteServer("in_1", "India", "IN", "Mumbai",
-                "151.247.124.15", "151.247.124.15", "HTTP_PROXY", 50100),
-            RemoteServer("kr_1", "South Korea", "KR", "Seoul",
-                "151.247.124.16", "151.247.124.16", "SOCKS5_PROXY", 50101),
-            RemoteServer("ch_1", "Switzerland", "CH", "Zurich",
-                "151.247.124.17", "151.247.124.17", "HTTP_PROXY", 50100),
-            RemoteServer("es_1", "Spain", "ES", "Madrid",
-                "151.247.124.18", "151.247.124.18", "HTTP_PROXY", 50100),
-            RemoteServer("jp_1", "Japan", "JP", "Tokyo",
-                "", "", "SOCKS5_PROXY", 50101),
-            RemoteServer("ca_1", "Canada", "CA", "Toronto",
-                "", "", "SOCKS5_PROXY", 50101),
-            RemoteServer("sg_1", "Singapore", "SG", "Singapore",
-                "", "", "SOCKS5_PROXY", 50101),
-            RemoteServer("au_1", "Australia", "AU", "Sydney",
-                "", "", "SOCKS5_PROXY", 50101),
-            RemoteServer("br_1", "Brazil", "BR", "Sao Paulo",
-                "", "", "SOCKS5_PROXY", 50101),
-            RemoteServer("se_1", "Sweden", "SE", "Stockholm",
-                "", "", "SOCKS5_PROXY", 50101)
+            RemoteServer(
+                id = "user_proxy_socks5_1",
+                countryName = "United States",
+                countryCode = "US",
+                city = "New York",
+                hostname = "151.247.124.10",
+                ipAddress = "151.247.124.10",
+                protocol = "SOCKS5_PROXY",
+                port = 50101
+            ),
+            RemoteServer(
+                id = "user_proxy_socks5_2",
+                countryName = "United Kingdom",
+                countryCode = "GB",
+                city = "London",
+                hostname = "151.247.124.11",
+                ipAddress = "151.247.124.11",
+                protocol = "SOCKS5_PROXY",
+                port = 50101
+            ),
+            RemoteServer(
+                id = "user_proxy_http_2",
+                countryName = "Germany",
+                countryCode = "DE",
+                city = "Frankfurt",
+                hostname = "151.247.124.12",
+                ipAddress = "151.247.124.12",
+                protocol = "HTTP_PROXY",
+                port = 50100
+            ),
+            RemoteServer(
+                id = "wireguard_japan",
+                countryName = "Japan",
+                countryCode = "JP",
+                city = "Tokyo",
+                hostname = "tokyo-wg.example.com",
+                ipAddress = "1.2.3.4",
+                protocol = "WIREGUARD",
+                port = 51820,
+                wgPublicKey = "YOUR_SERVER_PUBLIC_KEY",
+                wgPrivateKey = "YOUR_CLIENT_PRIVATE_KEY",
+                wgAddress = "10.0.0.2/32",
+                wgEndpoint = "1.2.3.4:51820"
+            ),
+            RemoteServer(
+                id = "openvpn_canada",
+                countryName = "Canada",
+                countryCode = "CA",
+                city = "Toronto",
+                hostname = "ca-ovpn.example.com",
+                ipAddress = "5.6.7.8",
+                protocol = "OPENVPN_UDP",
+                port = 1194,
+                ovpnConfig = "client\ndev tun\nproto udp\nremote 5.6.7.8 1194\n..."
+            ),
+            RemoteServer(
+                id = "user_proxy_socks5_france",
+                countryName = "France",
+                countryCode = "FR",
+                city = "Paris",
+                hostname = "151.247.124.13",
+                ipAddress = "151.247.124.13",
+                protocol = "SOCKS5_PROXY",
+                port = 50101
+            ),
+            RemoteServer(
+                id = "user_proxy_http_netherlands",
+                countryName = "Netherlands",
+                countryCode = "NL",
+                city = "Amsterdam",
+                hostname = "151.247.124.14",
+                ipAddress = "151.247.124.14",
+                protocol = "HTTP_PROXY",
+                port = 50100
+            ),
+            RemoteServer(
+                id = "wireguard_singapore",
+                countryName = "Singapore",
+                countryCode = "SG",
+                city = "Singapore",
+                hostname = "sg-wg.example.com",
+                ipAddress = "1.2.3.5",
+                protocol = "WIREGUARD",
+                port = 51820,
+                wgPublicKey = "YOUR_SG_SERVER_PUBLIC_KEY",
+                wgPrivateKey = "YOUR_SG_CLIENT_PRIVATE_KEY",
+                wgAddress = "10.0.0.3/32",
+                wgEndpoint = "1.2.3.5:51820"
+            ),
+            RemoteServer(
+                id = "openvpn_australia",
+                countryName = "Australia",
+                countryCode = "AU",
+                city = "Sydney",
+                hostname = "au-ovpn.example.com",
+                ipAddress = "5.6.7.9",
+                protocol = "OPENVPN_UDP",
+                port = 1194,
+                ovpnConfig = "client\ndev tun\nproto udp\nremote 5.6.7.9 1194\n..."
+            ),
+            RemoteServer(
+                id = "user_proxy_http_india",
+                countryName = "India",
+                countryCode = "IN",
+                city = "Mumbai",
+                hostname = "151.247.124.15",
+                ipAddress = "151.247.124.15",
+                protocol = "HTTP_PROXY",
+                port = 50100
+            ),
+            RemoteServer(
+                id = "user_proxy_socks5_korea",
+                countryName = "South Korea",
+                countryCode = "KR",
+                city = "Seoul",
+                hostname = "151.247.124.16",
+                ipAddress = "151.247.124.16",
+                protocol = "SOCKS5_PROXY",
+                port = 50101
+            ),
+            RemoteServer(
+                id = "user_proxy_http_switzerland",
+                countryName = "Switzerland",
+                countryCode = "CH",
+                city = "Zurich",
+                hostname = "151.247.124.17",
+                ipAddress = "151.247.124.17",
+                protocol = "HTTP_PROXY",
+                port = 50100
+            ),
+            RemoteServer(
+                id = "openvpn_brazil",
+                countryName = "Brazil",
+                countryCode = "BR",
+                city = "Sao Paulo",
+                hostname = "br-ovpn.example.com",
+                ipAddress = "5.6.7.10",
+                protocol = "OPENVPN_UDP",
+                port = 1194,
+                ovpnConfig = "client\ndev tun\nproto udp\nremote 5.6.7.10 1194\n..."
+            ),
+            RemoteServer(
+                id = "wireguard_sweden",
+                countryName = "Sweden",
+                countryCode = "SE",
+                city = "Stockholm",
+                hostname = "se-wg.example.com",
+                ipAddress = "1.2.3.6",
+                protocol = "WIREGUARD",
+                port = 51820,
+                wgPublicKey = "YOUR_SE_SERVER_PUBLIC_KEY",
+                wgPrivateKey = "YOUR_SE_CLIENT_PRIVATE_KEY",
+                wgAddress = "10.0.0.4/32",
+                wgEndpoint = "1.2.3.6:51820"
+            ),
+            RemoteServer(
+                id = "user_proxy_http_spain",
+                countryName = "Spain",
+                countryCode = "ES",
+                city = "Madrid",
+                hostname = "151.247.124.18",
+                ipAddress = "151.247.124.18",
+                protocol = "HTTP_PROXY",
+                port = 50100
+            )
         )
     }
 
@@ -151,6 +286,15 @@ class VpnServerRepository @Inject constructor(
             protocol    = proto,
             port        = port,
             isPremium   = isPremium,
+            ovpnConfig  = ovpnConfig,
+            ikev2Host   = ikev2Host,
+            ikev2User   = ikev2User,
+            ikev2Pass   = ikev2Pass,
+            wgEndpoint  = wgEndpoint,
+            wgPrivateKey = wgPrivateKey,
+            wgPublicKey = wgPublicKey,
+            wgAddress   = wgAddress,
+            wgDns       = wgDns,
             proxyUser   = if (needsAuth) u else "",
             proxyPass   = if (needsAuth) p else ""
         )
