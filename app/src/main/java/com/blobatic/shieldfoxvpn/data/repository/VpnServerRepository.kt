@@ -17,24 +17,24 @@ import javax.inject.Singleton
 // ─── JSON model for each server entry ─────────────────────────────────────────
 // This matches the exact structure of the original VpnServer class.
 data class RemoteServer(
-    @SerializedName("id")          val id: String,
-    @SerializedName("countryName") val countryName: String,
-    @SerializedName("countryCode") val countryCode: String,
-    @SerializedName("city")        val city: String,
-    @SerializedName("hostname")    val hostname: String,
-    @SerializedName("ipAddress")   val ipAddress: String,
-    @SerializedName("protocol")    val protocol: String,
-    @SerializedName("port")        val port: Int,
-    @SerializedName("isPremium")   val isPremium: Boolean = false,
-    @SerializedName("ovpnConfig")   val ovpnConfig: String = "",
-    @SerializedName("ikev2Host")    val ikev2Host: String = "",
-    @SerializedName("ikev2User")    val ikev2User: String = "",
-    @SerializedName("ikev2Pass")    val ikev2Pass: String = "",
-    @SerializedName("wgEndpoint")   val wgEndpoint: String = "",
-    @SerializedName("wgPrivateKey") val wgPrivateKey: String = "",
-    @SerializedName("wgPublicKey")  val wgPublicKey: String = "",
-    @SerializedName("wgAddress")    val wgAddress: String = "",
-    @SerializedName("wgDns")        val wgDns: String = "1.1.1.1"
+    @SerializedName("id")          val id: String?,
+    @SerializedName("countryName") val countryName: String?,
+    @SerializedName("countryCode") val countryCode: String?,
+    @SerializedName("city")        val city: String?,
+    @SerializedName("hostname")    val hostname: String?,
+    @SerializedName("ipAddress")   val ipAddress: String?,
+    @SerializedName("protocol")    val protocol: String?,
+    @SerializedName("port")        val port: Int?,
+    @SerializedName("isPremium")   val isPremium: Boolean? = false,
+    @SerializedName("ovpnConfig")   val ovpnConfig: String? = null,
+    @SerializedName("ikev2Host")    val ikev2Host: String? = null,
+    @SerializedName("ikev2User")    val ikev2User: String? = null,
+    @SerializedName("ikev2Pass")    val ikev2Pass: String? = null,
+    @SerializedName("wgEndpoint")   val wgEndpoint: String? = null,
+    @SerializedName("wgPrivateKey") val wgPrivateKey: String? = null,
+    @SerializedName("wgPublicKey")  val wgPublicKey: String? = null,
+    @SerializedName("wgAddress")    val wgAddress: String? = null,
+    @SerializedName("wgDns")        val wgDns: String? = null
 )
 
 /**
@@ -266,7 +266,7 @@ class VpnServerRepository @Inject constructor(
     private fun RemoteServer.toVpnServer(): VpnServer {
         val u = RemoteCredentialStore.getUsername()
         val p = RemoteCredentialStore.getPassword()
-        val proto = when (protocol.uppercase()) {
+        val proto = when (protocol?.uppercase() ?: "SOCKS5_PROXY") {
             "SOCKS5_PROXY" -> VpnProtocol.SOCKS5_PROXY
             "HTTP_PROXY"   -> VpnProtocol.HTTP_PROXY
             "WIREGUARD"    -> VpnProtocol.WIREGUARD
@@ -277,24 +277,24 @@ class VpnServerRepository @Inject constructor(
         }
         val needsAuth = proto == VpnProtocol.HTTP_PROXY || proto == VpnProtocol.SOCKS5_PROXY
         return VpnServer(
-            id          = id,
-            countryName = countryName,
-            countryCode = countryCode,
-            city        = city,
-            hostname    = hostname,
-            ipAddress   = ipAddress,
+            id          = id ?: "",
+            countryName = countryName ?: "",
+            countryCode = countryCode ?: "",
+            city        = city ?: "",
+            hostname    = hostname ?: "",
+            ipAddress   = ipAddress ?: "",
             protocol    = proto,
-            port        = port,
-            isPremium   = isPremium,
-            ovpnConfig  = ovpnConfig,
-            ikev2Host   = ikev2Host,
-            ikev2User   = ikev2User,
-            ikev2Pass   = ikev2Pass,
-            wgEndpoint  = wgEndpoint,
-            wgPrivateKey = wgPrivateKey,
-            wgPublicKey = wgPublicKey,
-            wgAddress   = wgAddress,
-            wgDns       = wgDns,
+            port        = port ?: 0,
+            isPremium   = isPremium ?: false,
+            ovpnConfig  = ovpnConfig ?: "",
+            ikev2Host   = ikev2Host ?: "",
+            ikev2User   = ikev2User ?: "",
+            ikev2Pass   = ikev2Pass ?: "",
+            wgEndpoint  = wgEndpoint ?: "",
+            wgPrivateKey = wgPrivateKey ?: "",
+            wgPublicKey = wgPublicKey ?: "",
+            wgAddress   = wgAddress ?: "",
+            wgDns       = wgDns ?: "1.1.1.1",
             proxyUser   = if (needsAuth) u else "",
             proxyPass   = if (needsAuth) p else ""
         )
