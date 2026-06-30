@@ -75,7 +75,19 @@ class VpnServerRepository @Inject constructor(
             RemoteServer("ch_1", "Switzerland", "CH", "Zurich",
                 "151.247.124.17", "151.247.124.17", "HTTP_PROXY", 50100),
             RemoteServer("es_1", "Spain", "ES", "Madrid",
-                "151.247.124.18", "151.247.124.18", "HTTP_PROXY", 50100)
+                "151.247.124.18", "151.247.124.18", "HTTP_PROXY", 50100),
+            RemoteServer("jp_1", "Japan", "JP", "Tokyo",
+                "", "", "SOCKS5_PROXY", 50101),
+            RemoteServer("ca_1", "Canada", "CA", "Toronto",
+                "", "", "SOCKS5_PROXY", 50101),
+            RemoteServer("sg_1", "Singapore", "SG", "Singapore",
+                "", "", "SOCKS5_PROXY", 50101),
+            RemoteServer("au_1", "Australia", "AU", "Sydney",
+                "", "", "SOCKS5_PROXY", 50101),
+            RemoteServer("br_1", "Brazil", "BR", "Sao Paulo",
+                "", "", "SOCKS5_PROXY", 50101),
+            RemoteServer("se_1", "Sweden", "SE", "Stockholm",
+                "", "", "SOCKS5_PROXY", 50101)
         )
     }
 
