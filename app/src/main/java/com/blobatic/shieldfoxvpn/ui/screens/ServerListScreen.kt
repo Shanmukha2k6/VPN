@@ -41,7 +41,7 @@ fun ServerListScreen(
         query.isBlank() ||
         s.countryName.contains(query, ignoreCase = true) ||
         s.city.contains(query, ignoreCase = true)
-    }.sortedWith(compareBy<VpnServer> { if (it.ping <= 0) Int.MAX_VALUE else it.ping }.thenBy { it.countryName })
+    }.sortedBy { it.countryName }
 
     val currentPrimary = MaterialTheme.colorScheme.primary
     val currentOnBackground = MaterialTheme.colorScheme.onBackground
