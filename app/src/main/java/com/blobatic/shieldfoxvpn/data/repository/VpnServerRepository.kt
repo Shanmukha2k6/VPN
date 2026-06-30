@@ -1,243 +1,201 @@
 package com.blobatic.shieldfoxvpn.data.repository
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
 import com.blobatic.shieldfoxvpn.data.model.VpnServer
 import com.blobatic.shieldfoxvpn.data.remote.RemoteCredentialStore
+import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// ─── Remote JSON model (no credentials — only IPs, ports, countries) ──────────
+
+data class RemoteServer(
+    @SerializedName("id")          val id: String,
+    @SerializedName("countryName") val countryName: String,
+    @SerializedName("countryCode") val countryCode: String,
+    @SerializedName("city")        val city: String,
+    @SerializedName("hostname")    val hostname: String,
+    @SerializedName("ipAddress")   val ipAddress: String,
+    @SerializedName("protocol")    val protocol: String,   // "SOCKS5_PROXY", "HTTP_PROXY", etc.
+    @SerializedName("port")        val port: Int,
+    @SerializedName("isPremium")   val isPremium: Boolean = false
+)
+
 /**
- * Repository providing custom private proxy nodes purchased for SecureVPN.
- * All public free servers (VPNGate, WireGuard public, VPNBook) are removed.
+ * Repository that fetches the server list from a remote JSON URL.
  *
- * SECURITY: Proxy credentials are NOT stored in this file.
- * They are fetched at runtime from Firebase Remote Config via RemoteCredentialStore.
- * To update credentials: change them in Firebase Console → Publish. No app update needed.
+ * HOW IT WORKS:
+ * 1. App starts → fetches credentials from Firebase Remote Config (no credentials in APK)
+ * 2. App starts → fetches server list from YOUR_SERVER_LIST_URL (no credentials in JSON either)
+ * 3. Credentials are injected into server objects in memory only at connection time
+ * 4. If offline → falls back to the last cached server list (stored in SharedPreferences)
+ * 5. If never connected before → falls back to the built-in FALLBACK_SERVERS list
+ *
+ * TO ADD/REMOVE/CHANGE SERVERS: Edit the JSON file at YOUR_SERVER_LIST_URL → done.
+ * TO CHANGE CREDENTIALS: Update Firebase Remote Config → done.
+ * NO APP UPDATE EVER NEEDED for either.
  */
 @Singleton
 class VpnServerRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient
 ) {
+    private val gson = Gson()
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("vpn_server_cache", Context.MODE_PRIVATE)
+
     companion object {
-        /**
-         * Builds the server list using runtime-fetched credentials.
-         * Server IPs and ports are not secrets, only credentials are.
-         */
-        fun buildServers(): List<VpnServer> {
-            val u = RemoteCredentialStore.getUsername()
-            val p = RemoteCredentialStore.getPassword()
-            return listOf(
-                VpnServer(
-                    id = "user_proxy_socks5_1",
-                    countryName = "United States",
-                    countryCode = "US",
-                    city = "New York",
-                    hostname = "151.247.124.10",
-                    ipAddress = "151.247.124.10",
-                    protocol = VpnProtocol.SOCKS5_PROXY,
-                    port = 50101,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "user_proxy_socks5_2",
-                    countryName = "United Kingdom",
-                    countryCode = "GB",
-                    city = "London",
-                    hostname = "151.247.124.11",
-                    ipAddress = "151.247.124.11",
-                    protocol = VpnProtocol.SOCKS5_PROXY,
-                    port = 50101,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "user_proxy_http_2",
-                    countryName = "Germany",
-                    countryCode = "DE",
-                    city = "Frankfurt",
-                    hostname = "151.247.124.12",
-                    ipAddress = "151.247.124.12",
-                    protocol = VpnProtocol.HTTP_PROXY,
-                    port = 50100,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "wireguard_japan",
-                    countryName = "Japan",
-                    countryCode = "JP",
-                    city = "Tokyo",
-                    hostname = "tokyo-wg.example.com",
-                    ipAddress = "1.2.3.4",
-                    protocol = VpnProtocol.WIREGUARD,
-                    port = 51820,
-                    wgPublicKey = "YOUR_SERVER_PUBLIC_KEY",
-                    wgPrivateKey = "YOUR_CLIENT_PRIVATE_KEY",
-                    wgAddress = "10.0.0.2/32",
-                    wgEndpoint = "1.2.3.4:51820"
-                ),
-                VpnServer(
-                    id = "openvpn_canada",
-                    countryName = "Canada",
-                    countryCode = "CA",
-                    city = "Toronto",
-                    hostname = "ca-ovpn.example.com",
-                    ipAddress = "5.6.7.8",
-                    protocol = VpnProtocol.OPENVPN_UDP,
-                    port = 1194,
-                    ovpnConfig = "client\ndev tun\nproto udp\nremote 5.6.7.8 1194\n..."
-                ),
-                VpnServer(
-                    id = "user_proxy_socks5_france",
-                    countryName = "France",
-                    countryCode = "FR",
-                    city = "Paris",
-                    hostname = "151.247.124.13",
-                    ipAddress = "151.247.124.13",
-                    protocol = VpnProtocol.SOCKS5_PROXY,
-                    port = 50101,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "user_proxy_http_netherlands",
-                    countryName = "Netherlands",
-                    countryCode = "NL",
-                    city = "Amsterdam",
-                    hostname = "151.247.124.14",
-                    ipAddress = "151.247.124.14",
-                    protocol = VpnProtocol.HTTP_PROXY,
-                    port = 50100,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "wireguard_singapore",
-                    countryName = "Singapore",
-                    countryCode = "SG",
-                    city = "Singapore",
-                    hostname = "sg-wg.example.com",
-                    ipAddress = "1.2.3.5",
-                    protocol = VpnProtocol.WIREGUARD,
-                    port = 51820,
-                    wgPublicKey = "YOUR_SG_SERVER_PUBLIC_KEY",
-                    wgPrivateKey = "YOUR_SG_CLIENT_PRIVATE_KEY",
-                    wgAddress = "10.0.0.3/32",
-                    wgEndpoint = "1.2.3.5:51820"
-                ),
-                VpnServer(
-                    id = "openvpn_australia",
-                    countryName = "Australia",
-                    countryCode = "AU",
-                    city = "Sydney",
-                    hostname = "au-ovpn.example.com",
-                    ipAddress = "5.6.7.9",
-                    protocol = VpnProtocol.OPENVPN_UDP,
-                    port = 1194,
-                    ovpnConfig = "client\ndev tun\nproto udp\nremote 5.6.7.9 1194\n..."
-                ),
-                VpnServer(
-                    id = "user_proxy_http_india",
-                    countryName = "India",
-                    countryCode = "IN",
-                    city = "Mumbai",
-                    hostname = "151.247.124.15",
-                    ipAddress = "151.247.124.15",
-                    protocol = VpnProtocol.HTTP_PROXY,
-                    port = 50100,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "user_proxy_socks5_korea",
-                    countryName = "South Korea",
-                    countryCode = "KR",
-                    city = "Seoul",
-                    hostname = "151.247.124.16",
-                    ipAddress = "151.247.124.16",
-                    protocol = VpnProtocol.SOCKS5_PROXY,
-                    port = 50101,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "user_proxy_http_switzerland",
-                    countryName = "Switzerland",
-                    countryCode = "CH",
-                    city = "Zurich",
-                    hostname = "151.247.124.17",
-                    ipAddress = "151.247.124.17",
-                    protocol = VpnProtocol.HTTP_PROXY,
-                    port = 50100,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                ),
-                VpnServer(
-                    id = "openvpn_brazil",
-                    countryName = "Brazil",
-                    countryCode = "BR",
-                    city = "Sao Paulo",
-                    hostname = "br-ovpn.example.com",
-                    ipAddress = "5.6.7.10",
-                    protocol = VpnProtocol.OPENVPN_UDP,
-                    port = 1194,
-                    ovpnConfig = "client\ndev tun\nproto udp\nremote 5.6.7.10 1194\n..."
-                ),
-                VpnServer(
-                    id = "wireguard_sweden",
-                    countryName = "Sweden",
-                    countryCode = "SE",
-                    city = "Stockholm",
-                    hostname = "se-wg.example.com",
-                    ipAddress = "1.2.3.6",
-                    protocol = VpnProtocol.WIREGUARD,
-                    port = 51820,
-                    wgPublicKey = "YOUR_SE_SERVER_PUBLIC_KEY",
-                    wgPrivateKey = "YOUR_SE_CLIENT_PRIVATE_KEY",
-                    wgAddress = "10.0.0.4/32",
-                    wgEndpoint = "1.2.3.6:51820"
-                ),
-                VpnServer(
-                    id = "user_proxy_http_spain",
-                    countryName = "Spain",
-                    countryCode = "ES",
-                    city = "Madrid",
-                    hostname = "151.247.124.18",
-                    ipAddress = "151.247.124.18",
-                    protocol = VpnProtocol.HTTP_PROXY,
-                    port = 50100,
-                    proxyUser = u,
-                    proxyPass = p,
-                    isPremium = false
-                )
-            )
+        private const val TAG = "VpnServerRepository"
+
+        // ── ⚠️ SET THIS TO YOUR JSON URL ─────────────────────────────────────
+        // Host this file on GitHub (raw), your website, Firebase Storage, etc.
+        // The file contains only IPs, ports, and country info — NO credentials.
+        // Example: "https://raw.githubusercontent.com/Shanmukha2k6/VPN/main/servers.json"
+        const val SERVER_LIST_URL = "https://raw.githubusercontent.com/Shanmukha2k6/VPN/main/servers.json"
+        // ─────────────────────────────────────────────────────────────────────
+
+        private const val CACHE_KEY = "cached_server_json"
+
+        // Hardcoded emergency fallback — used only if BOTH remote fetch AND cache fail
+        // (e.g. brand new install with no internet)
+        // No credentials here — they are always injected from RemoteCredentialStore
+        private val EMERGENCY_FALLBACK = listOf(
+            RemoteServer("us_1", "United States", "US", "New York",
+                "151.247.124.10", "151.247.124.10", "SOCKS5_PROXY", 50101),
+            RemoteServer("gb_1", "United Kingdom", "GB", "London",
+                "151.247.124.11", "151.247.124.11", "SOCKS5_PROXY", 50101),
+            RemoteServer("de_1", "Germany", "DE", "Frankfurt",
+                "151.247.124.12", "151.247.124.12", "HTTP_PROXY", 50100),
+            RemoteServer("fr_1", "France", "FR", "Paris",
+                "151.247.124.13", "151.247.124.13", "SOCKS5_PROXY", 50101),
+            RemoteServer("nl_1", "Netherlands", "NL", "Amsterdam",
+                "151.247.124.14", "151.247.124.14", "HTTP_PROXY", 50100),
+            RemoteServer("in_1", "India", "IN", "Mumbai",
+                "151.247.124.15", "151.247.124.15", "HTTP_PROXY", 50100),
+            RemoteServer("kr_1", "South Korea", "KR", "Seoul",
+                "151.247.124.16", "151.247.124.16", "SOCKS5_PROXY", 50101),
+            RemoteServer("ch_1", "Switzerland", "CH", "Zurich",
+                "151.247.124.17", "151.247.124.17", "HTTP_PROXY", 50100),
+            RemoteServer("es_1", "Spain", "ES", "Madrid",
+                "151.247.124.18", "151.247.124.18", "HTTP_PROXY", 50100)
+        )
+    }
+
+    /**
+     * Main entry point. Call this when loading the server list.
+     *
+     * Flow:
+     *   1. Fetch credentials (Firebase Remote Config)
+     *   2. Fetch server list (remote JSON URL)
+     *   3. Inject credentials into servers
+     *   4. Return result (with fallback chain if anything fails)
+     */
+    suspend fun fetchServers(): Result<List<VpnServer>> = withContext(Dispatchers.IO) {
+        // Step 1: Get credentials (returns cached if already fetched this session)
+        RemoteCredentialStore.fetchCredentials()
+
+        // Step 2: Fetch server list from remote JSON
+        val remoteServers = fetchRemoteServerList()
+
+        // Step 3: Inject credentials and convert to VpnServer
+        val servers = remoteServers.map { it.toVpnServer() }
+
+        Result.success(servers)
+    }
+
+    /**
+     * Fetches the JSON server list from the remote URL.
+     * Falls back to:
+     *   1. SharedPreferences cache (last successful fetch)
+     *   2. EMERGENCY_FALLBACK (hardcoded, no credentials)
+     */
+    private fun fetchRemoteServerList(): List<RemoteServer> {
+        return try {
+            val request = Request.Builder()
+                .url(SERVER_LIST_URL)
+                .header("Cache-Control", "no-cache")
+                .build()
+
+            val response = okHttpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                val json = response.body?.string() ?: return loadCached()
+                // Cache this successful response for offline use
+                prefs.edit().putString(CACHE_KEY, json).apply()
+                Log.d(TAG, "Remote server list fetched successfully")
+                parseJson(json) ?: loadCached()
+            } else {
+                Log.w(TAG, "Remote fetch failed (HTTP ${response.code}), using cache")
+                loadCached()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Remote fetch failed (${e.message}), using cache")
+            loadCached()
+        }
+    }
+
+    /** Loads from SharedPreferences cache (last successful remote fetch) */
+    private fun loadCached(): List<RemoteServer> {
+        val json = prefs.getString(CACHE_KEY, null)
+        return if (json != null) {
+            Log.d(TAG, "Using cached server list")
+            parseJson(json) ?: EMERGENCY_FALLBACK
+        } else {
+            Log.d(TAG, "No cache available, using emergency fallback")
+            EMERGENCY_FALLBACK
+        }
+    }
+
+    /** Parses the JSON array into a list of RemoteServer objects */
+    private fun parseJson(json: String): List<RemoteServer>? {
+        return try {
+            val type = object : com.google.gson.reflect.TypeToken<List<RemoteServer>>() {}.type
+            gson.fromJson<List<RemoteServer>>(json, type)
+        } catch (e: Exception) {
+            Log.e(TAG, "JSON parse error: ${e.message}")
+            null
         }
     }
 
     /**
-     * Fetches credentials from Remote Config first, then builds the server list.
-     * Falls back to cached Remote Config values if offline.
+     * Converts a RemoteServer (from JSON) into a VpnServer (used by the app).
+     * Credentials are injected HERE from RemoteCredentialStore — never from the JSON.
      */
-    suspend fun fetchServers(): Result<List<VpnServer>> = withContext(Dispatchers.IO) {
-        // Fetch credentials remotely — no-op if already cached from a previous call
-        RemoteCredentialStore.fetchCredentials()
-        Result.success(buildServers())
+    private fun RemoteServer.toVpnServer(): VpnServer {
+        val u = RemoteCredentialStore.getUsername()
+        val p = RemoteCredentialStore.getPassword()
+        val proto = when (protocol.uppercase()) {
+            "SOCKS5_PROXY" -> VpnProtocol.SOCKS5_PROXY
+            "HTTP_PROXY"   -> VpnProtocol.HTTP_PROXY
+            "WIREGUARD"    -> VpnProtocol.WIREGUARD
+            "OPENVPN_UDP"  -> VpnProtocol.OPENVPN_UDP
+            "OPENVPN_TCP"  -> VpnProtocol.OPENVPN_TCP
+            "IKEV2"        -> VpnProtocol.IKEV2
+            else           -> VpnProtocol.SOCKS5_PROXY
+        }
+        return VpnServer(
+            id          = id,
+            countryName = countryName,
+            countryCode = countryCode,
+            city        = city,
+            hostname    = hostname,
+            ipAddress   = ipAddress,
+            protocol    = proto,
+            port        = port,
+            isPremium   = isPremium,
+            // Credentials injected from Remote Config — not from JSON
+            proxyUser   = if (proto == VpnProtocol.HTTP_PROXY || proto == VpnProtocol.SOCKS5_PROXY) u else "",
+            proxyPass   = if (proto == VpnProtocol.HTTP_PROXY || proto == VpnProtocol.SOCKS5_PROXY) p else ""
+        )
     }
 
-    fun getCachedFallbackServers(): List<VpnServer> = buildServers()
+    fun getCachedFallbackServers(): List<VpnServer> = loadCached().map { it.toVpnServer() }
 }

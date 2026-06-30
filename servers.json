@@ -1,0 +1,101 @@
+[
+  {
+    "id": "us_1",
+    "countryName": "United States",
+    "countryCode": "US",
+    "city": "New York",
+    "hostname": "151.247.124.10",
+    "ipAddress": "151.247.124.10",
+    "protocol": "SOCKS5_PROXY",
+    "port": 50101,
+    "isPremium": false
+  },
+  {
+    "id": "gb_1",
+    "countryName": "United Kingdom",
+    "countryCode": "GB",
+    "city": "London",
+    "hostname": "151.247.124.11",
+    "ipAddress": "151.247.124.11",
+    "protocol": "SOCKS5_PROXY",
+    "port": 50101,
+    "isPremium": false
+  },
+  {
+    "id": "de_1",
+    "countryName": "Germany",
+    "countryCode": "DE",
+    "city": "Frankfurt",
+    "hostname": "151.247.124.12",
+    "ipAddress": "151.247.124.12",
+    "protocol": "HTTP_PROXY",
+    "port": 50100,
+    "isPremium": false
+  },
+  {
+    "id": "fr_1",
+    "countryName": "France",
+    "countryCode": "FR",
+    "city": "Paris",
+    "hostname": "151.247.124.13",
+    "ipAddress": "151.247.124.13",
+    "protocol": "SOCKS5_PROXY",
+    "port": 50101,
+    "isPremium": false
+  },
+  {
+    "id": "nl_1",
+    "countryName": "Netherlands",
+    "countryCode": "NL",
+    "city": "Amsterdam",
+    "hostname": "151.247.124.14",
+    "ipAddress": "151.247.124.14",
+    "protocol": "HTTP_PROXY",
+    "port": 50100,
+    "isPremium": false
+  },
+  {
+    "id": "in_1",
+    "countryName": "India",
+    "countryCode": "IN",
+    "city": "Mumbai",
+    "hostname": "151.247.124.15",
+    "ipAddress": "151.247.124.15",
+    "protocol": "HTTP_PROXY",
+    "port": 50100,
+    "isPremium": false
+  },
+  {
+    "id": "kr_1",
+    "countryName": "South Korea",
+    "countryCode": "KR",
+    "city": "Seoul",
+    "hostname": "151.247.124.16",
+    "ipAddress": "151.247.124.16",
+    "protocol": "SOCKS5_PROXY",
+    "port": 50101,
+    "isPremium": false
+  },
+  {
+    "id": "ch_1",
+    "countryName": "Switzerland",
+    "countryCode": "CH",
+    "city": "Zurich",
+    "hostname": "151.247.124.17",
+    "ipAddress": "151.247.124.17",
+    "protocol": "HTTP_PROXY",
+    "port": 50100,
+    "isPremium": false
+  },
+  {
+    "id": "es_1",
+    "countryName": "Spain",
+    "countryCode": "ES",
+    "city": "Madrid",
+    "hostname": "151.247.124.18",
+    "ipAddress": "151.247.124.18",
+    "protocol": "HTTP_PROXY",
+    "port": 50100,
+    "isPremium": false
+  }
+]
