@@ -6,7 +6,12 @@ import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
 import com.blobatic.shieldfoxvpn.data.model.VpnServer
 import com.blobatic.shieldfoxvpn.data.remote.RemoteCredentialStore
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
 import com.google.gson.annotations.SerializedName
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,7 +55,21 @@ class VpnServerRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient
 ) {
-    private val gson = Gson()
+    /**
+     * A Gson TypeAdapter that converts null JSON strings to empty string ""
+     * instead of null, preventing Kotlin non-null runtime check NullPointerException.
+     */
+    private class NullSafeStringAdapter : TypeAdapter<String>() {
+        override fun write(out: JsonWriter, value: String?) { out.value(value) }
+        override fun read(reader: JsonReader): String {
+            if (reader.peek() == JsonToken.NULL) { reader.nextNull(); return "" }
+            return reader.nextString()
+        }
+    }
+
+    private val gson: Gson = GsonBuilder()
+        .registerTypeAdapter(String::class.java, NullSafeStringAdapter())
+        .create()
 
     companion object {
         private const val TAG = "VpnServerRepository"
