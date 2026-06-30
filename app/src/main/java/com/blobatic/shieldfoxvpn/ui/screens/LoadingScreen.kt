@@ -1,5 +1,6 @@
 package com.blobatic.shieldfoxvpn.ui.screens
 
+import android.app.Activity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -19,19 +20,85 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blobatic.shieldfoxvpn.R
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.appopen.AppOpenAd
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.AdError
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoadingScreen(
     onLoadingComplete: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var adDismissed by remember { mutableStateOf(false) }
+    var adFailed by remember { mutableStateOf(false) }
+    var isAdShowing by remember { mutableStateOf(false) }
+    var isAnimationComplete by remember { mutableStateOf(false) }
+
     // Smooth progress filling from 0f to 1f over 2.2 seconds
     val progress = remember { Animatable(0f) }
+
     LaunchedEffect(Unit) {
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 2000, easing = LinearOutSlowInEasing)
+        // 1. Run progress bar animation
+        launch {
+            progress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 2000, easing = LinearOutSlowInEasing)
+            )
+            isAnimationComplete = true
+        }
+
+        // 2. Load AdMob App Open Ad in parallel
+        val adUnitId = if (com.blobatic.shieldfoxvpn.BuildConfig.DEBUG) {
+            "ca-app-pub-3940256099942544/9257395921" // Test App Open Ad ID
+        } else {
+            "ca-app-pub-3940256099942544/9257395921" // Replace with production ID
+        }
+
+        val request = AdRequest.Builder().build()
+        AppOpenAd.load(
+            context,
+            adUnitId,
+            request,
+            AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,
+            object : AppOpenAd.AppOpenAdLoadCallback() {
+                override fun onAdLoaded(ad: AppOpenAd) {
+                    ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                        override fun onAdDismissedFullScreenContent() {
+                            adDismissed = true
+                        }
+
+                        override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                            adFailed = true
+                        }
+                    }
+                    if (context is Activity && !context.isFinishing) {
+                        isAdShowing = true
+                        ad.show(context)
+                    } else {
+                        adFailed = true
+                    }
+                }
+
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    adFailed = true
+                }
+            }
         )
-        onLoadingComplete()
+    }
+
+    LaunchedEffect(isAnimationComplete, adDismissed, adFailed, isAdShowing) {
+        if (isAnimationComplete) {
+            if (isAdShowing) {
+                if (adDismissed || adFailed) {
+                    onLoadingComplete()
+                }
+            } else {
+                onLoadingComplete()
+            }
+        }
     }
 
     Box(
