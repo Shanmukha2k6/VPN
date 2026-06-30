@@ -427,20 +427,28 @@ class VpnTunnelService : VpnService() {
     // ─── Stats Tracking ─────────────────────────────────────────────────────────
 
     private fun startWgStatsTracking() {
+        LocalAuthProxyServer.resetStats()
         statsJob = serviceScope.launch {
             while (isActive) {
                 delay(1000)
                 try {
-                    val stats = wgBackend?.getStatistics(wgTunnel)
-                    if (stats != null) {
-                        val current = _vpnState.value
-                        if (current is VpnState.Connected) {
-                            val peerKey = Key.fromBase64(current.server.wgPublicKey)
-                            val peerStats = stats.peer(peerKey)
-                            val rx = peerStats?.rxBytes ?: 0L
-                            val tx = peerStats?.txBytes ?: 0L
-                            
+                    val current = _vpnState.value
+                    if (current is VpnState.Connected) {
+                        if (current.server.protocol == VpnProtocol.HTTP_PROXY || 
+                            current.server.protocol == VpnProtocol.SOCKS5_PROXY) {
+                            val rx = LocalAuthProxyServer.totalBytesIn
+                            val tx = LocalAuthProxyServer.totalBytesOut
                             updateState(current.copy(bytesIn = rx, bytesOut = tx))
+                        } else {
+                            val stats = wgBackend?.getStatistics(wgTunnel)
+                            if (stats != null) {
+                                val peerKey = Key.fromBase64(current.server.wgPublicKey)
+                                val peerStats = stats.peer(peerKey)
+                                val rx = peerStats?.rxBytes ?: 0L
+                                val tx = peerStats?.txBytes ?: 0L
+                                
+                                updateState(current.copy(bytesIn = rx, bytesOut = tx))
+                            }
                         }
                     }
                 } catch (e: Exception) {

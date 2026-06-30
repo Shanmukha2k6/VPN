@@ -1,4 +1,4 @@
-﻿package com.blobatic.shieldfoxvpn.service
+package com.blobatic.shieldfoxvpn.service
 
 import android.util.Log
 import java.io.InputStream
@@ -25,6 +25,14 @@ class LocalAuthProxyServer(
 ) {
     companion object {
         private const val TAG = "LocalAuthProxyServer"
+
+        @Volatile var totalBytesIn = 0L
+        @Volatile var totalBytesOut = 0L
+
+        fun resetStats() {
+            totalBytesIn = 0L
+            totalBytesOut = 0L
+        }
     }
 
     private var serverSocket: ServerSocket? = null
@@ -254,10 +262,10 @@ class LocalAuthProxyServer(
 
             // 3. Start bi-directional piping
             val clientToUpstream = thread(start = true, isDaemon = true, name = "PipeClientToUpstream") {
-                pipe(clientSocket, upstreamSocket, clientIn, upstreamOut)
+                pipe(clientSocket, upstreamSocket, clientIn, upstreamOut, isDownload = false)
             }
             val upstreamToClient = thread(start = true, isDaemon = true, name = "PipeUpstreamToClient") {
-                pipe(upstreamSocket, clientSocket, upstreamIn, clientOut)
+                pipe(upstreamSocket, clientSocket, upstreamIn, clientOut, isDownload = true)
             }
 
             clientToUpstream.join()
@@ -313,13 +321,18 @@ class LocalAuthProxyServer(
         return lines.joinToString("\r\n") + "\r\n\r\n"
     }
 
-    private fun pipe(socket1: Socket, socket2: Socket, inputStream: InputStream, outputStream: OutputStream) {
+    private fun pipe(socket1: Socket, socket2: Socket, inputStream: java.io.InputStream, outputStream: java.io.OutputStream, isDownload: Boolean) {
         val buffer = ByteArray(32768)
         var bytesRead: Int
         try {
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 outputStream.write(buffer, 0, bytesRead)
                 outputStream.flush()
+                if (isDownload) {
+                    totalBytesIn += bytesRead
+                } else {
+                    totalBytesOut += bytesRead
+                }
             }
         } catch (e: Exception) {
             // connection ended
