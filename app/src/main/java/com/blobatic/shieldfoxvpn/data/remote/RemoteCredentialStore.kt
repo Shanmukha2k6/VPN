@@ -6,63 +6,87 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import kotlinx.coroutines.tasks.await
 
 /**
- * Fetches proxy credentials securely from Firebase Remote Config.
- * No credentials are stored in the APK — they live only in Firebase Console.
+ * Single source of truth for all remote configuration.
+ * Everything lives in Firebase Remote Config — credentials AND server list.
  *
- * To update credentials: change values in Firebase Console → Publish.
- * No app update required.
+ * Firebase Console → Remote Config → set these keys:
+ *
+ *   proxy_username  →  your proxy username
+ *   proxy_password  →  your proxy password
+ *   server_list     →  JSON array of servers (see servers.json in project root for format)
+ *
+ * To update anything: change in Firebase Console → Publish → done.
+ * No app update needed. No GitHub needed. Everything is private.
  */
 object RemoteCredentialStore {
 
     private const val TAG = "RemoteCredentialStore"
 
-    // In-memory only. Never written to disk.
+    // ─── Firebase Remote Config keys ─────────────────────────────────────────
+    private const val KEY_USERNAME    = "proxy_username"
+    private const val KEY_PASSWORD    = "proxy_password"
+    private const val KEY_SERVER_LIST = "server_list"
+
+    // ─── In-memory values (never written to disk) ─────────────────────────────
     private var proxyUsername: String = ""
     private var proxyPassword: String = ""
-
-    // Remote Config keys — these key names are safe to be in source code,
-    // only the VALUES are sensitive and live in Firebase Console.
-    private const val KEY_USERNAME = "proxy_username"
-    private const val KEY_PASSWORD = "proxy_password"
+    private var serverListJson: String = ""
 
     private val remoteConfig: FirebaseRemoteConfig by lazy {
         FirebaseRemoteConfig.getInstance().also { rc ->
             val settings = FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(3600) // Cache for 1 hour
+                .setMinimumFetchIntervalInSeconds(3600) // refresh every 1 hour
                 .build()
             rc.setConfigSettingsAsync(settings)
-            // Safe defaults — empty strings until fetched.
-            // Do NOT put real credentials here.
+
+            // Safe defaults — empty until first fetch
+            // ⚠️ Do NOT put real credentials or IPs here
             rc.setDefaultsAsync(mapOf(
-                KEY_USERNAME to "",
-                KEY_PASSWORD to ""
+                KEY_USERNAME    to "",
+                KEY_PASSWORD    to "",
+                KEY_SERVER_LIST to "[]"
             ))
         }
     }
 
     /**
-     * Call this once at app startup (e.g., in Application.onCreate or ViewModel init).
-     * Fetches and activates Remote Config values.
-     * Falls back to cached values if offline.
+     * Fetches all remote config values from Firebase.
+     * Call this once at app startup. Subsequent calls use cached values
+     * unless the 1-hour interval has passed.
+     *
+     * @return true if credentials are available (either fresh or cached)
      */
-    suspend fun fetchCredentials(): Boolean {
+    suspend fun fetchAll(): Boolean {
         return try {
             remoteConfig.fetchAndActivate().await()
-            proxyUsername = remoteConfig.getString(KEY_USERNAME)
-            proxyPassword = remoteConfig.getString(KEY_PASSWORD)
-            Log.d(TAG, "Credentials fetched (username length: ${proxyUsername.length})")
+            proxyUsername  = remoteConfig.getString(KEY_USERNAME)
+            proxyPassword  = remoteConfig.getString(KEY_PASSWORD)
+            serverListJson = remoteConfig.getString(KEY_SERVER_LIST)
+            Log.d(TAG, "Remote config fetched. Username set: ${proxyUsername.isNotEmpty()}, Servers: ${serverListJson.length} chars")
             proxyUsername.isNotEmpty()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch credentials: ${e.message}")
-            // Try to use cached values from last successful fetch
-            proxyUsername = remoteConfig.getString(KEY_USERNAME)
-            proxyPassword = remoteConfig.getString(KEY_PASSWORD)
-            false
+            // Use cached values from the last successful fetch (Firebase caches locally)
+            Log.w(TAG, "Remote config fetch failed (${e.message}), using cached values")
+            proxyUsername  = remoteConfig.getString(KEY_USERNAME)
+            proxyPassword  = remoteConfig.getString(KEY_PASSWORD)
+            serverListJson = remoteConfig.getString(KEY_SERVER_LIST)
+            proxyUsername.isNotEmpty()
         }
     }
 
-    fun getUsername(): String = proxyUsername
-    fun getPassword(): String = proxyPassword
-    fun clearMemory() { proxyUsername = ""; proxyPassword = "" }
-    fun isReady(): Boolean = proxyUsername.isNotEmpty() && proxyPassword.isNotEmpty()
+    // Kept for backward compatibility with existing code
+    suspend fun fetchCredentials(): Boolean = fetchAll()
+
+    fun getUsername(): String    = proxyUsername
+    fun getPassword(): String    = proxyPassword
+    fun getServerListJson(): String = serverListJson
+
+    fun isReady(): Boolean =
+        proxyUsername.isNotEmpty() && proxyPassword.isNotEmpty()
+
+    fun clearMemory() {
+        proxyUsername  = ""
+        proxyPassword  = ""
+        serverListJson = ""
+    }
 }

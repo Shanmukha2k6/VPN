@@ -1,7 +1,6 @@
 package com.blobatic.shieldfoxvpn.data.repository
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import com.blobatic.shieldfoxvpn.data.model.VpnProtocol
 import com.blobatic.shieldfoxvpn.data.model.VpnServer
@@ -12,11 +11,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// ─── Remote JSON model (no credentials — only IPs, ports, countries) ──────────
+// ─── JSON model for each server entry ─────────────────────────────────────────
+// This matches exactly what you type in Firebase Remote Config → server_list
 
 data class RemoteServer(
     @SerializedName("id")          val id: String,
@@ -25,24 +24,26 @@ data class RemoteServer(
     @SerializedName("city")        val city: String,
     @SerializedName("hostname")    val hostname: String,
     @SerializedName("ipAddress")   val ipAddress: String,
-    @SerializedName("protocol")    val protocol: String,   // "SOCKS5_PROXY", "HTTP_PROXY", etc.
+    @SerializedName("protocol")    val protocol: String,
     @SerializedName("port")        val port: Int,
     @SerializedName("isPremium")   val isPremium: Boolean = false
 )
 
 /**
- * Repository that fetches the server list from a remote JSON URL.
+ * Repository that manages the VPN server list.
  *
- * HOW IT WORKS:
- * 1. App starts → fetches credentials from Firebase Remote Config (no credentials in APK)
- * 2. App starts → fetches server list from YOUR_SERVER_LIST_URL (no credentials in JSON either)
- * 3. Credentials are injected into server objects in memory only at connection time
- * 4. If offline → falls back to the last cached server list (stored in SharedPreferences)
- * 5. If never connected before → falls back to the built-in FALLBACK_SERVERS list
+ * ALL configuration comes from Firebase Remote Config:
+ *   - proxy_username  → your proxy username
+ *   - proxy_password  → your proxy password
+ *   - server_list     → JSON array of servers (IPs, ports, countries)
  *
- * TO ADD/REMOVE/CHANGE SERVERS: Edit the JSON file at YOUR_SERVER_LIST_URL → done.
- * TO CHANGE CREDENTIALS: Update Firebase Remote Config → done.
- * NO APP UPDATE EVER NEEDED for either.
+ * Nothing sensitive is in the APK. To update anything:
+ *   → Firebase Console → Remote Config → edit → Publish
+ *   → Users get the update within 1 hour. No app update needed.
+ *
+ * Fallback chain if Firebase is unreachable:
+ *   1. Firebase SDK's own local cache (automatic, survives app restarts)
+ *   2. EMERGENCY_FALLBACK below (same structure, no credentials)
  */
 @Singleton
 class VpnServerRepository @Inject constructor(
@@ -50,24 +51,12 @@ class VpnServerRepository @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
     private val gson = Gson()
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("vpn_server_cache", Context.MODE_PRIVATE)
 
     companion object {
         private const val TAG = "VpnServerRepository"
 
-        // ── ⚠️ SET THIS TO YOUR JSON URL ─────────────────────────────────────
-        // Host this file on GitHub (raw), your website, Firebase Storage, etc.
-        // The file contains only IPs, ports, and country info — NO credentials.
-        // Example: "https://raw.githubusercontent.com/Shanmukha2k6/VPN/main/servers.json"
-        const val SERVER_LIST_URL = "https://raw.githubusercontent.com/Shanmukha2k6/VPN/main/servers.json"
-        // ─────────────────────────────────────────────────────────────────────
-
-        private const val CACHE_KEY = "cached_server_json"
-
-        // Hardcoded emergency fallback — used only if BOTH remote fetch AND cache fail
-        // (e.g. brand new install with no internet)
-        // No credentials here — they are always injected from RemoteCredentialStore
+        // Emergency fallback — used ONLY if Firebase has never been reached
+        // (brand new install, never had internet). No credentials here.
         private val EMERGENCY_FALLBACK = listOf(
             RemoteServer("us_1", "United States", "US", "New York",
                 "151.247.124.10", "151.247.124.10", "SOCKS5_PROXY", 50101),
@@ -91,83 +80,41 @@ class VpnServerRepository @Inject constructor(
     }
 
     /**
-     * Main entry point. Call this when loading the server list.
-     *
-     * Flow:
-     *   1. Fetch credentials (Firebase Remote Config)
-     *   2. Fetch server list (remote JSON URL)
-     *   3. Inject credentials into servers
-     *   4. Return result (with fallback chain if anything fails)
+     * Main entry point. Fetches everything from Firebase and returns the server list.
      */
     suspend fun fetchServers(): Result<List<VpnServer>> = withContext(Dispatchers.IO) {
-        // Step 1: Get credentials (returns cached if already fetched this session)
-        RemoteCredentialStore.fetchCredentials()
+        // Fetch credentials + server list from Firebase Remote Config
+        RemoteCredentialStore.fetchAll()
 
-        // Step 2: Fetch server list from remote JSON
-        val remoteServers = fetchRemoteServerList()
+        // Parse the server list JSON from Remote Config
+        val remoteServers = parseServerList(RemoteCredentialStore.getServerListJson())
 
-        // Step 3: Inject credentials and convert to VpnServer
-        val servers = remoteServers.map { it.toVpnServer() }
-
-        Result.success(servers)
+        // Inject credentials and return
+        Result.success(remoteServers.map { it.toVpnServer() })
     }
 
     /**
-     * Fetches the JSON server list from the remote URL.
-     * Falls back to:
-     *   1. SharedPreferences cache (last successful fetch)
-     *   2. EMERGENCY_FALLBACK (hardcoded, no credentials)
+     * Parses the JSON string from Firebase Remote Config into a list of RemoteServer.
+     * Falls back to EMERGENCY_FALLBACK if the JSON is empty or malformed.
      */
-    private fun fetchRemoteServerList(): List<RemoteServer> {
-        return try {
-            val request = Request.Builder()
-                .url(SERVER_LIST_URL)
-                .header("Cache-Control", "no-cache")
-                .build()
-
-            val response = okHttpClient.newCall(request).execute()
-            if (response.isSuccessful) {
-                val json = response.body?.string() ?: return loadCached()
-                // Cache this successful response for offline use
-                prefs.edit().putString(CACHE_KEY, json).apply()
-                Log.d(TAG, "Remote server list fetched successfully")
-                parseJson(json) ?: loadCached()
-            } else {
-                Log.w(TAG, "Remote fetch failed (HTTP ${response.code}), using cache")
-                loadCached()
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Remote fetch failed (${e.message}), using cache")
-            loadCached()
+    private fun parseServerList(json: String): List<RemoteServer> {
+        if (json.isBlank() || json == "[]") {
+            Log.w(TAG, "Server list from Firebase is empty, using emergency fallback")
+            return EMERGENCY_FALLBACK
         }
-    }
-
-    /** Loads from SharedPreferences cache (last successful remote fetch) */
-    private fun loadCached(): List<RemoteServer> {
-        val json = prefs.getString(CACHE_KEY, null)
-        return if (json != null) {
-            Log.d(TAG, "Using cached server list")
-            parseJson(json) ?: EMERGENCY_FALLBACK
-        } else {
-            Log.d(TAG, "No cache available, using emergency fallback")
+        return try {
+            val type = object : com.google.gson.reflect.TypeToken<List<RemoteServer>>() {}.type
+            val parsed = gson.fromJson<List<RemoteServer>>(json, type)
+            if (parsed.isNullOrEmpty()) EMERGENCY_FALLBACK else parsed
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse server list JSON: ${e.message}")
             EMERGENCY_FALLBACK
         }
     }
 
-    /** Parses the JSON array into a list of RemoteServer objects */
-    private fun parseJson(json: String): List<RemoteServer>? {
-        return try {
-            val type = object : com.google.gson.reflect.TypeToken<List<RemoteServer>>() {}.type
-            gson.fromJson<List<RemoteServer>>(json, type)
-        } catch (e: Exception) {
-            Log.e(TAG, "JSON parse error: ${e.message}")
-            null
-        }
-    }
-
     /**
-     * Converts a RemoteServer (from JSON) into a VpnServer (used by the app).
-     * Credentials are injected HERE from RemoteCredentialStore — never from the JSON.
+     * Converts a RemoteServer (from Firebase JSON) into a VpnServer used by the app.
+     * Credentials are injected HERE — they never appear in the JSON.
      */
     private fun RemoteServer.toVpnServer(): VpnServer {
         val u = RemoteCredentialStore.getUsername()
@@ -181,6 +128,7 @@ class VpnServerRepository @Inject constructor(
             "IKEV2"        -> VpnProtocol.IKEV2
             else           -> VpnProtocol.SOCKS5_PROXY
         }
+        val needsAuth = proto == VpnProtocol.HTTP_PROXY || proto == VpnProtocol.SOCKS5_PROXY
         return VpnServer(
             id          = id,
             countryName = countryName,
@@ -191,11 +139,11 @@ class VpnServerRepository @Inject constructor(
             protocol    = proto,
             port        = port,
             isPremium   = isPremium,
-            // Credentials injected from Remote Config — not from JSON
-            proxyUser   = if (proto == VpnProtocol.HTTP_PROXY || proto == VpnProtocol.SOCKS5_PROXY) u else "",
-            proxyPass   = if (proto == VpnProtocol.HTTP_PROXY || proto == VpnProtocol.SOCKS5_PROXY) p else ""
+            proxyUser   = if (needsAuth) u else "",
+            proxyPass   = if (needsAuth) p else ""
         )
     }
 
-    fun getCachedFallbackServers(): List<VpnServer> = loadCached().map { it.toVpnServer() }
+    fun getCachedFallbackServers(): List<VpnServer> =
+        parseServerList(RemoteCredentialStore.getServerListJson()).map { it.toVpnServer() }
 }
