@@ -26,17 +26,19 @@ class LocalAuthProxyServer(
     companion object {
         private const val TAG = "LocalAuthProxyServer"
 
-        @Volatile var totalBytesIn = 0L
-        @Volatile var totalBytesOut = 0L
+        val totalBytesIn = java.util.concurrent.atomic.AtomicLong(0L)
+        val totalBytesOut = java.util.concurrent.atomic.AtomicLong(0L)
+
+        private val threadPool = java.util.concurrent.Executors.newCachedThreadPool()
 
         fun resetStats() {
-            totalBytesIn = 0L
-            totalBytesOut = 0L
+            totalBytesIn.set(0L)
+            totalBytesOut.set(0L)
         }
     }
 
     private var serverSocket: ServerSocket? = null
-    private var isRunning = false
+    @Volatile private var isRunning = false
 
     fun start() {
         isRunning = true
@@ -47,7 +49,7 @@ class LocalAuthProxyServer(
                 while (isRunning) {
                     try {
                         val clientSocket = serverSocket?.accept() ?: break
-                        thread(start = true, isDaemon = true, name = "LocalProxyBridgeHandler") {
+                        threadPool.execute {
                             handleClient(clientSocket)
                         }
                     } catch (e: Exception) {
@@ -77,6 +79,7 @@ class LocalAuthProxyServer(
         var upstreamSocket: Socket? = null
         try {
             clientSocket.keepAlive = true
+            clientSocket.soTimeout = 10000 // 10 seconds timeout to prevent socket hanging
             val clientIn = clientSocket.getInputStream()
             val clientOut = clientSocket.getOutputStream()
 
@@ -261,15 +264,15 @@ class LocalAuthProxyServer(
             val upstreamOut = activeOut
 
             // 3. Start bi-directional piping
-            val clientToUpstream = thread(start = true, isDaemon = true, name = "PipeClientToUpstream") {
+            val clientToUpstream = threadPool.submit {
                 pipe(clientSocket, upstreamSocket, clientIn, upstreamOut, isDownload = false)
             }
-            val upstreamToClient = thread(start = true, isDaemon = true, name = "PipeUpstreamToClient") {
+            val upstreamToClient = threadPool.submit {
                 pipe(upstreamSocket, clientSocket, upstreamIn, clientOut, isDownload = true)
             }
 
-            clientToUpstream.join()
-            upstreamToClient.join()
+            clientToUpstream.get()
+            upstreamToClient.get()
 
         } catch (e: Exception) {
             // Log connection error
@@ -329,9 +332,9 @@ class LocalAuthProxyServer(
                 outputStream.write(buffer, 0, bytesRead)
                 outputStream.flush()
                 if (isDownload) {
-                    totalBytesIn += bytesRead
+                    totalBytesIn.addAndGet(bytesRead.toLong())
                 } else {
-                    totalBytesOut += bytesRead
+                    totalBytesOut.addAndGet(bytesRead.toLong())
                 }
             }
         } catch (e: Exception) {

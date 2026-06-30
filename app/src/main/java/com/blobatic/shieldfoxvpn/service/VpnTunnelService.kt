@@ -447,8 +447,8 @@ class VpnTunnelService : VpnService() {
                     if (current is VpnState.Connected) {
                         if (current.server.protocol == VpnProtocol.HTTP_PROXY || 
                             current.server.protocol == VpnProtocol.SOCKS5_PROXY) {
-                            val rx = LocalAuthProxyServer.totalBytesIn
-                            val tx = LocalAuthProxyServer.totalBytesOut
+                            val rx = LocalAuthProxyServer.totalBytesIn.get()
+                            val tx = LocalAuthProxyServer.totalBytesOut.get()
                             updateState(current.copy(bytesIn = rx, bytesOut = tx))
                         } else {
                             val stats = wgBackend?.getStatistics(wgTunnel)

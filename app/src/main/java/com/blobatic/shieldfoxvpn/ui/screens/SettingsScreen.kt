@@ -152,7 +152,15 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconTint = currentOnBackground,
                         title = "Privacy Policy",
                         sub = "No-log routing commitment details",
-                        onClick = {}
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://shieldfoxvpn.com/privacy"))
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // ignore fallback
+                            }
+                        }
                     )
                     Divider()
                     NavRow(
@@ -161,7 +169,15 @@ fun SettingsScreen(onBack: () -> Unit) {
                         iconTint = currentOnBackground,
                         title = "Terms of Service",
                         sub = "Usage boundaries and fair routing rules",
-                        onClick = {}
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://shieldfoxvpn.com/terms"))
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // ignore fallback
+                            }
+                        }
                     )
                 }
             }
