@@ -35,7 +35,7 @@ object RemoteCredentialStore {
     private val remoteConfig: FirebaseRemoteConfig by lazy {
         FirebaseRemoteConfig.getInstance().also { rc ->
             val settings = FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(3600) // refresh every 1 hour
+                .setMinimumFetchIntervalInSeconds(0) // Always fetch fresh on every app open
                 .build()
             rc.setConfigSettingsAsync(settings)
 
