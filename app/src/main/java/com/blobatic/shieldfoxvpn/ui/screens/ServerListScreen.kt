@@ -350,16 +350,6 @@ private fun ServerCard(server: VpnServer, isSelected: Boolean, onClick: () -> Un
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val ping = server.ping.takeIf { it > 0 } ?: 45
-                Text(
-                    text = "${ping}ms",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = when {
-                        ping < 100 -> currentSecondary
-                        ping < 200 -> Amber
-                        else       -> Rose
-                    },
-                    fontWeight = FontWeight.SemiBold
-                )
                 SignalBars(ping)
             }
 
