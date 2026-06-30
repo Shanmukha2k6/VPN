@@ -152,7 +152,12 @@ class VpnViewModel @Inject constructor(
         }
 
         onRequestVpnPermission { granted ->
-            if (granted) connectToSelectedServer()
+            if (granted) {
+                viewModelScope.launch {
+                    delay(300)
+                    connectToSelectedServer()
+                }
+            }
         }
     }
 

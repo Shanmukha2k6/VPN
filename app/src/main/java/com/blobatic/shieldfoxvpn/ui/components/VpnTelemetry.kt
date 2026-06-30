@@ -17,6 +17,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blobatic.shieldfoxvpn.data.model.VpnState
@@ -131,7 +133,7 @@ fun VpnTelemetry(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(8.dp))
                 Column {
                     Text(
                         text = "UPLOAD",
@@ -139,7 +141,10 @@ fun VpnTelemetry(
                         color = Color(0xFF0F172A).copy(alpha = 0.6f),
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
-                        fontSize = 9.sp
+                        fontSize = 9.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(Modifier.height(1.dp))
                     Text(
@@ -147,7 +152,10 @@ fun VpnTelemetry(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F172A),
-                        fontSize = 16.sp
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -183,7 +191,7 @@ fun VpnTelemetry(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(8.dp))
                 Column {
                     Text(
                         text = "DOWNLOAD",
@@ -191,7 +199,10 @@ fun VpnTelemetry(
                         color = Color(0xFF0F172A).copy(alpha = 0.6f),
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
-                        fontSize = 9.sp
+                        fontSize = 9.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(Modifier.height(1.dp))
                     Text(
@@ -199,7 +210,10 @@ fun VpnTelemetry(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F172A),
-                        fontSize = 16.sp
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

@@ -349,7 +349,18 @@ class VpnTunnelService : VpnService() {
 
                 builder.addDisallowedApplication(packageName)
 
-                vpnInterface = builder.establish()
+                var retryCount = 0
+                while (vpnInterface == null && retryCount < 3) {
+                    try {
+                        vpnInterface = builder.establish()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to establish VPN interface (attempt ${retryCount + 1}): ${e.message}")
+                    }
+                    if (vpnInterface == null) {
+                        retryCount++
+                        delay(300)
+                    }
+                }
 
                 if (vpnInterface != null) {
                     val virtualIpStr = if (isSocks) {
