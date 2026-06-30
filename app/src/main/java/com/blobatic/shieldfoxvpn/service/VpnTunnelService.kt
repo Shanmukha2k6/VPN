@@ -393,6 +393,9 @@ class VpnTunnelService : VpnService() {
 
     private fun disconnect() {
         statsJob?.cancel()
+        statsJob = null
+
+        // Tear down WireGuard if active
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
                 val vpnManager = getSystemService(android.net.VpnManager::class.java)
@@ -407,6 +410,7 @@ class VpnTunnelService : VpnService() {
             Log.e(TAG, "Error stopping WireGuard tunnel", e)
         }
 
+        // Close interface and proxy
         try {
             vpnInterface?.close()
             vpnInterface = null
@@ -419,9 +423,16 @@ class VpnTunnelService : VpnService() {
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping local proxy", e)
         }
+
         updateState(VpnState.Disconnected)
         stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+
+        // Delay before stopSelf so Android's VPN subsystem finishes releasing
+        // the interface before the process is destroyed — prevents reconnect failures
+        serviceScope.launch {
+            delay(600)
+            stopSelf()
+        }
     }
 
     // ─── Stats Tracking ─────────────────────────────────────────────────────────

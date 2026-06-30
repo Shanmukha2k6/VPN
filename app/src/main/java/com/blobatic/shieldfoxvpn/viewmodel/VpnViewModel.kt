@@ -150,11 +150,19 @@ class VpnViewModel @Inject constructor(
             disconnect()
             return
         }
+        // If service is still tearing down from a recent disconnect, wait it out
+        if (current is VpnState.Disconnecting) {
+            viewModelScope.launch {
+                delay(1200)
+                connectToSelectedServer()
+            }
+            return
+        }
 
         onRequestVpnPermission { granted ->
             if (granted) {
                 viewModelScope.launch {
-                    delay(300)
+                    delay(400)
                     connectToSelectedServer()
                 }
             }
@@ -185,7 +193,7 @@ class VpnViewModel @Inject constructor(
         }
         context.startService(intent)
         viewModelScope.launch {
-            delay(500)
+            delay(1200) // Give Android's VPN subsystem time to fully release the interface
             VpnTunnelService.updateState(VpnState.Disconnected)
         }
     }
