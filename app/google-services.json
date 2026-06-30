@@ -1,13 +1,13 @@
-﻿{
+{
   "project_info": {
-    "project_number": "1234567890",
-    "project_id": "securevpn-app",
-    "storage_bucket": "securevpn-app.appspot.com"
+    "project_number": "914105551670",
+    "project_id": "shieldfox-vpn-2cfc8",
+    "storage_bucket": "shieldfox-vpn-2cfc8.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1234567890:android:abcdef1234567890",
+        "mobilesdk_app_id": "1:914105551670:android:94676ef0645caba6660197",
         "android_client_info": {
           "package_name": "com.blobatic.shieldfoxvpn"
         }
@@ -15,26 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "dummy_api_key_for_build"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1234567890:android:abcdef1234567891",
-        "android_client_info": {
-          "package_name": "com.blobatic.shieldfoxvpn.debug"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "dummy_api_key_for_build_debug"
+          "current_key": "AIzaSyAEU7HTtL4Ht1aPj6ifvIHGEE7J-sw2Lvo"
         }
       ],
       "services": {
